@@ -16,3 +16,20 @@ model Post {
   content   String
   createdAt DateTime @default(now())
 }
+
+model MakerSignature {
+  id                     Int       @id @default(autoincrement())
+  spender                String
+  homeTeamOdds           String
+  awayTeamOdds           String
+  limit                  String
+  nonce                  String
+  deadline               String
+  signature              String
+
+  // Normalized fields
+  homeTeamOddsNormalized Int
+  awayTeamOddsNormalized Int
+  limitNormalized       Int
+  deadlineNormalized    DateTime
+}
