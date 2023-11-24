@@ -8,6 +8,10 @@ import { DeployFunction } from "hardhat-deploy/types";
  * @param hre HardhatRuntimeEnvironment object.
  */
 const deployTopsportsEventFactory: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  function saltEvent(eventId: number, displayName: string): string {
+    const hash = hre.ethers.utils.solidityKeccak256(["uint256", "string"], [eventId, displayName]);
+    return hash;
+  }
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
 
@@ -32,7 +36,37 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   });
 
   // Get the deployed contract
-  // const TopsportsEventFactory = await hre.ethers.getContract("TopsportsEventFactory", deployer);
+  const TopsportsEventFactory = await hre.ethers.getContract("TopsportsEventFactory", deployer);
+
+  const TopsportsFunctionsConsumer = await hre.ethers.getContract("TopsportsFunctionsConsumer", deployer);
+  const MockEuroe = await hre.ethers.getContract("MockEuroe", deployer);
+
+  // adapted tasks/create.ts 'create-event' task
+  const eventFactory = await hre.ethers.getContractFactory("TopsportsEventCore");
+  const fragment = eventFactory.interface.getFunction("initialize");
+  if (!fragment) throw new Error("initialize function not found in interface");
+  const eventId = 401548411; // https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard/401548411
+  // const AVALANCHE_FUJI_EUROE_ADDR = '0xA089a21902914C3f3325dBE2334E9B466071E5f1';
+  const initializeData = eventFactory.interface.encodeFunctionData(fragment, [
+    eventId,
+    0,
+    MockEuroe.address,
+    TopsportsFunctionsConsumer.address,
+  ]);
+  // "date":"2023-08-12T17:00Z","name":"Tennessee Titans at Chicago Bears","shortName":"TEN @ CHI"
+  const name = "Tennessee Titans at Chicago Bears";
+  const salt = saltEvent(eventId, name);
+  const factoryContract = TopsportsEventFactory;
+  // const factoryContract = await hre.ethers.getContractAt(
+  //   'TopsportsEventFactory',
+  //   args.factory,
+  //   signer
+  // );
+  const contractAddr = await factoryContract.predictAddress(salt);
+  console.log(`Instance address:\t${contractAddr}`);
+
+  const tx = await factoryContract.createInstance(salt, initializeData);
+  console.log(`  [createInstance] tx-hash:${tx.hash} tx-type:${tx.type}`);
 };
 
 export default deployTopsportsEventFactory;
