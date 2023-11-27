@@ -23,7 +23,12 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
     You can run the `yarn account` command to check your balance in every network.
   */
   const { deployer } = await hre.getNamedAccounts();
-  const { deploy } = hre.deployments;
+  const { deploy, get } = hre.deployments;
+
+  if (await get("TopsportsEventFactory")) {
+    console.log("TopsportsEventFactory contract already deployed, skipping...");
+    return;
+  }
 
   await deploy("TopsportsEventFactory", {
     from: deployer,
