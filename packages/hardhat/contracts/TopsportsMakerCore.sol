@@ -7,6 +7,7 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {NoncesUpgradeable as Nonces} from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
 import {EIP712Upgradeable as EIP712} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import {OwnableUpgradeable as Ownable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {ITopsportsEventCore as EventCore} from "./interfaces/ITopsportsEventCore.sol";
 
@@ -16,7 +17,7 @@ import {ITopsportsEventCore as EventCore} from "./interfaces/ITopsportsEventCore
 /// funds are pulled from the the maker's provisionning contract when a user takes a bet on a market of the market maker.
 /// additionally stakes won by the market maker are collected  to this contract
 
-contract TopsportsMakerCore is EIP712, Nonces, Ownable {
+contract TopsportsMakerCore is Initializable, EIP712, Nonces, Ownable {
     using SafeERC20 for IERC20;
 
     error ExpiredSignature(uint256 deadline);
@@ -28,7 +29,7 @@ contract TopsportsMakerCore is EIP712, Nonces, Ownable {
     // EIP-712 typed structured data signature
     bytes32 private constant PERMIT_TYPEHASH =
         keccak256(
-            "Permit(address spender,int256 homeTeamOdds,int256 awayTeamOdds,uint256 limit,uint256 nonce,uint256 deadline)"
+            "Permit(address spender,int64 homeTeamOdds,int64 awayTeamOdds,uint256 limit,uint256 nonce,uint64 deadline)"
         );
 
     // Immutable variables
@@ -64,11 +65,11 @@ contract TopsportsMakerCore is EIP712, Nonces, Ownable {
 
     function hashMarket(
         address _spender,
-        int256 _homeTeamOdds,
-        int256 _awayTeamOdds,
+        int64 _homeTeamOdds,
+        int64 _awayTeamOdds,
         uint256 _limit,
         uint256 _nonce,
-        uint256 _deadline
+        uint64 _deadline
     ) private pure returns (bytes32) {
         return
             keccak256(
@@ -99,10 +100,10 @@ contract TopsportsMakerCore is EIP712, Nonces, Ownable {
      * @param _signature Signature of typed structured data describing the bet as agreed by the market maker.
      */
     function permit(
-        int256 _homeTeamOdds,
-        int256 _awayTeamOdds,
+        int64 _homeTeamOdds,
+        int64 _awayTeamOdds,
         uint256 _limit,
-        uint256 _deadline,
+        uint64 _deadline,
         bytes calldata _signature
     ) external {
         if (block.timestamp > _deadline) revert ExpiredSignature(_deadline);

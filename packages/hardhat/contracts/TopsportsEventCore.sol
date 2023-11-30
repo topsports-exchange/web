@@ -31,19 +31,22 @@ contract TopsportsEventCore is Initializable, Context {
         uint256 stake;
         uint256 profit;
         EventWinner winner;
-        bool claimed;
     }
 
     struct Market {
-        address maker; // provisionning contarct of the market maker
-        int256 homeTeamOdds;
-        int256 awayTeamOdds;
+        address maker; // provisionning contract of the market maker
+        int64 homeTeamOdds;
+        int64 awayTeamOdds;
         uint256 limit;
-        uint256 deadline;
+        uint64 deadline;
         Bet[] bets;
     }
 
-    // uint256 public deadline;
+    struct Wager {
+        uint256 totalWagered;
+        uint256 totalHomePayout;
+        uint256 totalAwayPayout;
+    }
 
     error Expired();
     error UnknownError();
@@ -51,16 +54,18 @@ contract TopsportsEventCore is Initializable, Context {
     event PlaceBet();
     event ResolveEvent();
 
-    error ExpiredSignature(uint256 deadline);
+    error InvalidResolver();
 
+    error ExpiredSignature(uint256 deadline);
     error UnexpectedRequestID(bytes32 requestId);
     error UnauthorizedConsumer(address consumer);
 
     // Immutable variables
-    uint256 public eventId;
-    uint256 public deadline;
+    uint64 public eventId;
+    uint64 public deadline; // event start time
     IERC20 public token; // stake token
     FunctionsConsumer public consumer;
+    bytes32 private resolverHash; // hash of the source run by cl functions
 
     // State variables
     Market[] public markets;
@@ -68,6 +73,7 @@ contract TopsportsEventCore is Initializable, Context {
     bytes32 private lastRequestId;
     mapping(bytes32 => uint256) private signatureToMarketId;
     mapping(bytes32 => bool) private signatureToMarketExist;
+    mapping(address => Wager) private wagerByAddress;
 
     modifier onlyConsumer() {
         if (address(consumer) != _msgSender()) revert UnauthorizedConsumer(_msgSender());
@@ -91,15 +97,17 @@ contract TopsportsEventCore is Initializable, Context {
      * @param _consumer The address of the consumer contract, responsible for sending requests and receiving responses from Chainlink regarding the outcome of the event.
      */
     function initialize(
-        uint256 _eventId,
-        uint256 _deadline,
+        uint64 _eventId,
+        uint64 _deadline,
         address _token,
-        address _consumer
+        address _consumer,
+        bytes32 _resolverHash
     ) external initializer {
         eventId = _eventId;
         deadline = _deadline;
         token = IERC20(_token);
         consumer = FunctionsConsumer(_consumer);
+        resolverHash = _resolverHash;
     }
 
     /**
@@ -111,6 +119,14 @@ contract TopsportsEventCore is Initializable, Context {
      */
     function getAllMarkets() external view returns (Market[] memory) {
         return markets;
+    }
+
+    function not(EventWinner _winner) private pure returns (EventWinner notWinner) {
+        if (_winner == EventWinner.HOME_TEAM) {
+            notWinner = EventWinner.AWAY_TEAM;
+        } else {
+            notWinner = EventWinner.HOME_TEAM;
+        }
     }
 
     /**
@@ -135,15 +151,15 @@ contract TopsportsEventCore is Initializable, Context {
     function placeBet(
         uint256 _stake,
         EventWinner _winner,
-        int256 _homeTeamOdds,
-        int256 _awayTeamOdds,
+        int64 _homeTeamOdds,
+        int64 _awayTeamOdds,
         uint256 _limit,
-        uint256 _deadline,
+        uint64 _deadline,
         address _maker,
         bytes calldata _signature
     ) external {
         uint256 marketId;
-        bytes32 sigHash = sha256(_signature);
+        bytes32 sigHash = keccak256(_signature);
 
         if (!signatureToMarketExist[sigHash]) {
             markets.push(
@@ -168,8 +184,20 @@ contract TopsportsEventCore is Initializable, Context {
         token.safeTransferFrom(_maker, address(this), profit);
         token.safeTransferFrom(_msgSender(), address(this), _stake);
 
-        Bet memory bet = Bet(_msgSender(), _stake, profit, _winner, false);
+        Bet memory bet = Bet(_msgSender(), _stake, profit, _winner);
         market.bets.push(bet);
+
+        wagerByAddress[_msgSender()].totalWagered += _stake;
+        wagerByAddress[_maker].totalWagered += profit;
+        if (_winner == EventWinner.HOME_TEAM) {
+            wagerByAddress[_msgSender()].totalHomePayout += _stake + profit;
+            wagerByAddress[_maker].totalAwayPayout += _stake + profit;
+        } else if (_winner == EventWinner.AWAY_TEAM) {
+            wagerByAddress[_msgSender()].totalAwayPayout += _stake + profit;
+            wagerByAddress[_maker].totalAwayPayout += _stake + profit;
+        } else {
+            // revert
+        }
 
         emit PlaceBet();
     }
@@ -211,6 +239,8 @@ contract TopsportsEventCore is Initializable, Context {
         uint32 _gasLimit,
         bytes32 _donID // Fixed at event creation
     ) public {
+        if (keccak256(bytes(_source)) != resolverHash) revert InvalidResolver();
+
         // Create an array with event ID as a string for Chainlink request arguments
         string[] memory args = new string[](1);
         args[0] = Strings.toString(eventId);
@@ -249,59 +279,35 @@ contract TopsportsEventCore is Initializable, Context {
 
         // 3. Set winner
         uint256 resolution = abi.decode(_response, (uint256));
-        if (resolution > 0) winner = EventWinner(resolution);
+        if (
+            (uint256(EventWinner.UNDEFINED) > resolution) &&
+            (resolution <= uint256(EventWinner.AWAY_TEAM))
+        ) {
+            winner = EventWinner(resolution);
+        } else {
+            // emit UnresolvedEvent();
+        }
 
         emit ResolveEvent();
     }
 
-    /**
-     * @notice If the sender is the winner, this function allows them to collect the payout for a specific bet.
-     * The payout can be transferred to an address different from the message sender.
-     *
-     * @dev The collectOne function retrieves information about the specified market and bet, checks if the bet
-     * has already been claimed, verifies the winner, and transfers the payout to the specified receiver address.
-     *
-     * @param _marketId The ID of the market where the bet has been placed.
-     * @param _betId The ID of the bet within the list of bets placed in that market.
-     * @param _to The address of the receiver of the payout.
-     * @return payout The total amount of the payout, including the original stake and any profit.
-     */
-    function collectOne(
-        uint256 _marketId,
-        uint256 _betId,
-        address _to
-    ) external returns (uint256 payout) {
-        Market memory market = markets[_marketId];
-        Bet memory bet = market.bets[_betId];
-
-        // Check if the bet has already been claimed
-        if (bet.claimed) revert AlreadyClaimed();
-        bet.claimed = true;
-
-        // Check the address and credentials of the sender for claiming
-        // TODO: Implement sender address and credentials check
-
-        if (bet.winner == winner) {
-            // Taker wins
-            if (_msgSender() != bet.taker) revert UnknownError();
+    function collect(address _to) external returns (uint256 amount) {
+        if ((deadline + 24 hours > block.timestamp) && (winner == EventWinner.UNDEFINED)) {
+            // Event completed without resolution of the event, release stake and
+            // profit to their respective owners
+            amount = wagerByAddress[_msgSender()].totalWagered;
         } else {
-            // Maker wins
-            if (_msgSender() != market.maker) revert UnknownError();
+            // collect fees
+            if (EventWinner.HOME_TEAM == winner) {
+                amount = wagerByAddress[_msgSender()].totalHomePayout;
+            } else if (EventWinner.AWAY_TEAM == winner) {
+                amount = wagerByAddress[_msgSender()].totalAwayPayout;
+            } else {
+                // revert
+            }
         }
-
-        // Calculate the total payout (stake + profit)
-        payout = bet.stake + bet.profit;
-
-        // Transfer the payout to the specified receiver address
-        token.safeTransferFrom(address(this), _to, payout);
-
-        // Note: Keeping the bet in storage for historical purposes
-
-        // Uncomment the following line if you want to delete the bet
-        // delete (markets[_marketId].bets[_betId]);
-
-        // Uncomment the following line if you want to delete the bet memory
-        // delete (bet);
+        token.safeTransferFrom(address(this), _to, amount);
+        delete (wagerByAddress[_msgSender()]);
 
         // Uncomment the following line if you want to emit a Claimed event
         // emit Claimed(payout);

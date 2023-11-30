@@ -3,10 +3,10 @@ pragma solidity ^0.8.20;
 
 interface ITopsportsMakerCore {
     function permit(
-        int256 _homeTeamOdds,
-        int256 _awayTeamOdds,
+        int64 _homeTeamOdds,
+        int64 _awayTeamOdds,
         uint256 _limit,
-        uint256 _deadline,
+        uint64 _deadline,
         bytes calldata _signature
     ) external;
 }
