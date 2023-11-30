@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     MockEuroe: {
-      address: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       abi: [
         {
           inputs: [
@@ -438,6 +438,24 @@ const deployedContracts = {
               type: "uint256",
             },
           ],
+          name: "freemint",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
           name: "mint",
           outputs: [],
           stateMutability: "nonpayable",
@@ -651,7 +669,7 @@ const deployedContracts = {
       },
     },
     TopsportsEventCore: {
-      address: "0xB9494117015B64cb06A6006aAF5B471960debc73",
+      address: "0x9a359cdf40C4bcc94FbBf893b23DDD56e10E032c",
       abi: [
         {
           inputs: [],
@@ -709,6 +727,11 @@ const deployedContracts = {
         {
           inputs: [],
           name: "InvalidInitialization",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidResolver",
           type: "error",
         },
         {
@@ -787,26 +810,16 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "uint256",
-              name: "_marketId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_betId",
-              type: "uint256",
-            },
-            {
               internalType: "address",
               name: "_to",
               type: "address",
             },
           ],
-          name: "collectOne",
+          name: "collect",
           outputs: [
             {
               internalType: "uint256",
-              name: "payout",
+              name: "amount",
               type: "uint256",
             },
           ],
@@ -831,9 +844,9 @@ const deployedContracts = {
           name: "deadline",
           outputs: [
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "",
-              type: "uint256",
+              type: "uint64",
             },
           ],
           stateMutability: "view",
@@ -844,9 +857,9 @@ const deployedContracts = {
           name: "eventId",
           outputs: [
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "",
-              type: "uint256",
+              type: "uint64",
             },
           ],
           stateMutability: "view",
@@ -864,14 +877,14 @@ const deployedContracts = {
                   type: "address",
                 },
                 {
-                  internalType: "int256",
+                  internalType: "int64",
                   name: "homeTeamOdds",
-                  type: "int256",
+                  type: "int64",
                 },
                 {
-                  internalType: "int256",
+                  internalType: "int64",
                   name: "awayTeamOdds",
-                  type: "int256",
+                  type: "int64",
                 },
                 {
                   internalType: "uint256",
@@ -879,9 +892,9 @@ const deployedContracts = {
                   type: "uint256",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint64",
                   name: "deadline",
-                  type: "uint256",
+                  type: "uint64",
                 },
                 {
                   components: [
@@ -905,11 +918,6 @@ const deployedContracts = {
                       name: "winner",
                       type: "uint8",
                     },
-                    {
-                      internalType: "bool",
-                      name: "claimed",
-                      type: "bool",
-                    },
                   ],
                   internalType: "struct TopsportsEventCore.Bet[]",
                   name: "bets",
@@ -927,14 +935,14 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "_eventId",
-              type: "uint256",
+              type: "uint64",
             },
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "_deadline",
-              type: "uint256",
+              type: "uint64",
             },
             {
               internalType: "address",
@@ -945,6 +953,11 @@ const deployedContracts = {
               internalType: "address",
               name: "_consumer",
               type: "address",
+            },
+            {
+              internalType: "bytes32",
+              name: "_resolverHash",
+              type: "bytes32",
             },
           ],
           name: "initialize",
@@ -968,14 +981,14 @@ const deployedContracts = {
               type: "address",
             },
             {
-              internalType: "int256",
+              internalType: "int64",
               name: "homeTeamOdds",
-              type: "int256",
+              type: "int64",
             },
             {
-              internalType: "int256",
+              internalType: "int64",
               name: "awayTeamOdds",
-              type: "int256",
+              type: "int64",
             },
             {
               internalType: "uint256",
@@ -983,9 +996,9 @@ const deployedContracts = {
               type: "uint256",
             },
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "deadline",
-              type: "uint256",
+              type: "uint64",
             },
           ],
           stateMutability: "view",
@@ -1004,14 +1017,14 @@ const deployedContracts = {
               type: "uint8",
             },
             {
-              internalType: "int256",
+              internalType: "int64",
               name: "_homeTeamOdds",
-              type: "int256",
+              type: "int64",
             },
             {
-              internalType: "int256",
+              internalType: "int64",
               name: "_awayTeamOdds",
-              type: "int256",
+              type: "int64",
             },
             {
               internalType: "uint256",
@@ -1019,9 +1032,9 @@ const deployedContracts = {
               type: "uint256",
             },
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "_deadline",
-              type: "uint256",
+              type: "uint64",
             },
             {
               internalType: "address",
@@ -1120,7 +1133,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TopsportsEventFactory: {
-      address: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0",
+      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
       abi: [
         {
           inputs: [],
@@ -1239,7 +1252,7 @@ const deployedContracts = {
       },
     },
     TopsportsFunctionsConsumer: {
-      address: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
       abi: [
         {
           inputs: [
@@ -1547,7 +1560,7 @@ const deployedContracts = {
       },
     },
     TopsportsMakerCore: {
-      address: "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+      address: "0xFf4c45EcD0C66664fd72F1d7772bb93AFB47eBb0",
       abi: [
         {
           inputs: [],
@@ -1872,14 +1885,14 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "int256",
+              internalType: "int64",
               name: "_homeTeamOdds",
-              type: "int256",
+              type: "int64",
             },
             {
-              internalType: "int256",
+              internalType: "int64",
               name: "_awayTeamOdds",
-              type: "int256",
+              type: "int64",
             },
             {
               internalType: "uint256",
@@ -1887,9 +1900,9 @@ const deployedContracts = {
               type: "uint256",
             },
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "_deadline",
-              type: "uint256",
+              type: "uint64",
             },
             {
               internalType: "bytes",
@@ -1974,19 +1987,18 @@ const deployedContracts = {
       ],
       inheritedFunctions: {},
     },
-    YourContract: {
-      address: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
+    TopsportsMakerFactory: {
+      address: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
       abi: [
         {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_owner",
-              type: "address",
-            },
-          ],
+          inputs: [],
           stateMutability: "nonpayable",
           type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "ERC1167FailedCreateClone",
+          type: "error",
         },
         {
           anonymous: false,
@@ -1994,47 +2006,16 @@ const deployedContracts = {
             {
               indexed: true,
               internalType: "address",
-              name: "greetingSetter",
+              name: "instance",
               type: "address",
             },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "newGreeting",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "premium",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "value",
-              type: "uint256",
-            },
           ],
-          name: "GreetingChange",
+          name: "CreateInstance",
           type: "event",
         },
         {
           inputs: [],
-          name: "greeting",
-          outputs: [
-            {
-              internalType: "string",
-              name: "",
-              type: "string",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "owner",
+          name: "IMPLEMENTATION",
           outputs: [
             {
               internalType: "address",
@@ -2046,76 +2027,48 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [],
-          name: "premium",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "",
-              type: "bool",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
           inputs: [
             {
-              internalType: "string",
-              name: "_newGreeting",
-              type: "string",
+              internalType: "bytes32",
+              name: "_salt",
+              type: "bytes32",
             },
-          ],
-          name: "setGreeting",
-          outputs: [],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "totalCounter",
-          outputs: [
             {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
+              internalType: "bytes",
+              name: "_data",
+              type: "bytes",
             },
           ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          name: "userGreetingCounter",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "withdraw",
+          name: "createInstance",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
         },
         {
-          stateMutability: "payable",
-          type: "receive",
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "_salt",
+              type: "bytes32",
+            },
+          ],
+          name: "predictAddress",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
         },
       ],
-      inheritedFunctions: {},
+      inheritedFunctions: {
+        IMPLEMENTATION: "contracts/utils/GenericFactory.sol",
+        createInstance: "contracts/utils/GenericFactory.sol",
+        predictAddress: "contracts/utils/GenericFactory.sol",
+      },
     },
   },
 } as const;
