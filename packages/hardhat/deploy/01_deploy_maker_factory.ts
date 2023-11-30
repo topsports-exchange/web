@@ -3,6 +3,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { parseUnits } from "ethers/lib/utils";
 import { postToApi, signEIP712Message } from "../scripts/makerSignature";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import * as fs from "fs";
 
 /**
  * Deploys a contract named "TopsportsMakerFactory" using the deployer account and
@@ -26,13 +27,15 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     You can run the `yarn account` command to check your balance in every network.
   */
   const { deployer } = await hre.getNamedAccounts();
-  const [account1]: SignerWithAddress[] = await hre.ethers.getSigners();
+  const [account1, account2]: SignerWithAddress[] = await hre.ethers.getSigners();
   const { deploy, get } = hre.deployments;
 
-  if (await get("TopsportsMakerFactory")) {
-    console.log("TopsportsMakerFactory contract already deployed, skipping...");
-    return;
-  }
+  try {
+    if (await get("TopsportsMakerFactory")) {
+      console.log("TopsportsMakerFactory contract already deployed, skipping...");
+      return;
+    }
+  } catch (e) {}
 
   await deploy("TopsportsMakerFactory", {
     from: deployer,
@@ -64,9 +67,13 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     const tx = await factoryContract.createInstance(salt, initializeData);
     console.log(`  [createInstance] tx-hash:${tx.hash} tx-type:${tx.type}`);
 
+    fs.writeFileSync("./scripts/makerAddress.ts", `export const address = '${contractAddr}';`, { encoding: "utf-8" });
+
     await MockEuroe.mint(contractAddr, parseUnits("10000.0", 6));
     console.log(`Balance after minting: ${hre.ethers.utils.formatUnits(await MockEuroe.balanceOf(contractAddr), 6)}`);
   }
+
+  await MockEuroe.mint(account2.address, parseUnits("10000.0", 6));
 
   if (true) {
     function saltEvent(eventId: number, displayName: string): string {
@@ -80,14 +87,22 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     const name = "Tennessee Titans at Chicago Bears";
     const evSalt = saltEvent(eventId, name);
     const evContractAddr = await TopsportsEventFactory.predictAddress(evSalt);
+    console.log(`Event address:\t${evContractAddr}`);
     //  await wallet._signTypedData(structuredData.domain, structuredData.types, data);
+
+    const TopsportsMakerCore = await hre.ethers.getContractAt("TopsportsMakerCore", contractAddr, account2);
+    // makerContract.nonces(spender))
+    const nonce = await TopsportsMakerCore.nonces(evContractAddr);
+
     const data = {
       spender: evContractAddr,
       homeTeamOdds: 100,
       awayTeamOdds: -200,
       limit: 789,
-      nonce: 1, // TODO fetch from contract
-      deadline: Math.floor(Date.now() / 1000) + 3600,
+      // nonce: 1, // TODO fetch from contract
+      nonce: nonce.toNumber(),
+      deadline: 1701421164,
+      // deadline: Math.floor(Date.now() / 1000) + 24*3600,
     };
     console.log("Generated Data:", data);
     const signature = await signEIP712Message(account1, data, contractAddr);

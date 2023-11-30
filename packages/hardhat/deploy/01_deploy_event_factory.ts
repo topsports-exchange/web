@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
+import * as fs from "fs";
 
 /**
  * Deploys a contract named "TopsportsEventFactory" using the deployer account and
@@ -25,10 +26,12 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   const { deployer } = await hre.getNamedAccounts();
   const { deploy, get } = hre.deployments;
 
-  if (await get("TopsportsEventFactory")) {
-    console.log("TopsportsEventFactory contract already deployed, skipping...");
-    return;
-  }
+  try {
+    if (await get("TopsportsEventFactory")) {
+      console.log("TopsportsEventFactory contract already deployed, skipping...");
+      return;
+    }
+  } catch (e) {}
 
   await deploy("TopsportsEventFactory", {
     from: deployer,
@@ -52,11 +55,13 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   if (!fragment) throw new Error("initialize function not found in interface");
   const eventId = 401548411; // https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard/401548411
   // const AVALANCHE_FUJI_EUROE_ADDR = '0xA089a21902914C3f3325dBE2334E9B466071E5f1';
+  const source = "XXX TODO XXX";
   const initializeData = eventFactory.interface.encodeFunctionData(fragment, [
     eventId,
     0,
     MockEuroe.address,
     TopsportsFunctionsConsumer.address,
+    hre.ethers.utils.solidityKeccak256(["string"], [source]),
   ]);
   // "date":"2023-08-12T17:00Z","name":"Tennessee Titans at Chicago Bears","shortName":"TEN @ CHI"
   const name = "Tennessee Titans at Chicago Bears";
@@ -69,6 +74,8 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   // );
   const contractAddr = await factoryContract.predictAddress(salt);
   console.log(`Instance address:\t${contractAddr}`);
+
+  fs.writeFileSync("./scripts/eventAddress.ts", `export const address = '${contractAddr}';`, { encoding: "utf-8" });
 
   const tx = await factoryContract.createInstance(salt, initializeData);
   console.log(`  [createInstance] tx-hash:${tx.hash} tx-type:${tx.type}`);
