@@ -95,14 +95,15 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     const nonce = await TopsportsMakerCore.nonces(evContractAddr);
 
     const data = {
+      maker: account1.address,
       spender: evContractAddr,
       homeTeamOdds: 100,
       awayTeamOdds: -200,
       limit: 789,
       // nonce: 1, // TODO fetch from contract
       nonce: nonce.toNumber(),
-      deadline: 1701421164,
-      // deadline: Math.floor(Date.now() / 1000) + 24*3600,
+      // deadline: 1701421164,
+      deadline: Math.floor(Date.now() / 1000) + 7 * 24 * 3600,
     };
     console.log("Generated Data:", data);
     const signature = await signEIP712Message(account1, data, contractAddr);

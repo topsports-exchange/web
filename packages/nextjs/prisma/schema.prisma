@@ -19,6 +19,7 @@ model Post {
 
 model MakerSignature {
   id                     Int       @id @default(autoincrement())
+  maker                  String
   spender                String
   homeTeamOdds           String
   awayTeamOdds           String
