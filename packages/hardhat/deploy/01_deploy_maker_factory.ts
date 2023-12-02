@@ -95,7 +95,7 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     const nonce = await TopsportsMakerCore.nonces(evContractAddr);
 
     const data = {
-      maker: account1.address,
+      maker: contractAddr,
       spender: evContractAddr,
       homeTeamOdds: 100,
       awayTeamOdds: -200,
