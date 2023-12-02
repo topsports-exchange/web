@@ -1,11 +1,21 @@
 // pages/events/[eventId].tsx
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { DeployedEvent, MakerSignature, PrismaClient } from "@prisma/client";
+import { Button, KIND as ButtonKind } from "baseui/button";
+import { Card, StyledBody } from "baseui/card";
+import { Modal, ModalBody, ModalButton, ModalFooter, ModalHeader, ROLE, SIZE } from "baseui/modal";
+import {
+  // StyledHeadCell,
+  StyledBodyCell,
+  StyledTable,
+} from "baseui/table-grid";
 import { Contract, JsonRpcProvider } from "ethers";
 import { GetServerSideProps } from "next";
 import { useContractWrite } from "wagmi";
 import deployedContractsData from "~~/contracts/deployedContracts";
+
+// import { useStyletron } from 'baseui';
 
 const prisma = new PrismaClient();
 
@@ -86,12 +96,30 @@ const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
       makerSignature.signature as `0x${string}`,
     ],
   });
-
+  const [isOpen, setIsOpen] = React.useState(true);
   return (
-    <div>
-      <button onClick={() => approveWrite()}>approve</button>
-      <button onClick={() => placeBetWrite()}>placeBet</button>
-    </div>
+    <Modal
+      onClose={() => setIsOpen(false)}
+      closeable
+      isOpen={isOpen}
+      animate
+      autoFocus
+      size={SIZE.default}
+      role={ROLE.dialog}
+    >
+      <ModalHeader>Bet 100 on Home</ModalHeader>
+      <ModalBody>
+        Proin ut dui sed metus pharetra hend rerit vel non mi. Nulla ornare faucibus ex, non facilisis nisl. Maecenas
+        aliquet mauris ut tempus.
+        <Button onClick={() => approveWrite()}>Approve</Button>
+        <Button onClick={() => placeBetWrite()}>Place Bet</Button>
+      </ModalBody>
+      <ModalFooter>
+        <ModalButton kind={ButtonKind.tertiary} onClick={() => setIsOpen(false)}>
+          Cancel
+        </ModalButton>
+      </ModalFooter>
+    </Modal>
   );
 };
 
@@ -179,53 +207,82 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
     fetchContractEventId();
   }, [eventId, event]);
 
-  if (!event) {
+  if (!event || !eventData) {
     return <div>Event not found</div>;
   }
 
+  const DATA = [
+    ["Name", eventData.name],
+    ["Short Name", eventData.shortName],
+    ["Full Name", eventData.fullName],
+    ["Venue", `${eventData.venue.fullName}, ${eventData.venue.city}`],
+    ["Home Team", eventData.homeTeamName],
+    ["Away Team", eventData.awayTeamName],
+    ["Status Name", eventData.status.name],
+    ["Status Completed", eventData.status.completed ? "Yes" : "No"],
+    ["Status Period", eventData.status?.period?.toString()],
+    ["Winner", winner === EventWinner.HOME_TEAM ? eventData.homeTeamName : eventData.awayTeamName],
+  ];
+
   return (
     <div>
-      <h1>Event Details</h1>
-      <p>Event ID from URL: {eventId}</p>
-      <p>Event ID from Contract: {contractEventId}</p>
-      {eventData && (
-        <>
-          <p>Name: {eventData.name}</p>
-          <p>Short Name: {eventData.shortName}</p>
-          <p>Full Name: {eventData.fullName}</p>
+      <Card
+        title="Event Details"
+        overrides={{ Root: { style: { width: "328px", float: "left", margin: "20px" } } }}
+        // headerImage={
+        //   'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/chi.png'
+        // }
+      >
+        <StyledBody>
           <p>
-            Venue: {eventData.venue.fullName}, {eventData.venue.city}
+            Event ID from URL / Contract: {eventId} / {contractEventId}
           </p>
-          <p>Home Team: {eventData.homeTeamName}</p>
-          <p>Away Team: {eventData.awayTeamName}</p>
-          <p>Status Name: {eventData.status.name}</p>
-          <p>Status Completed: {eventData.status.completed ? "Yes" : "No"}</p>
-          <p>Status Period: {eventData.status.period}</p>
-        </>
-      )}
+          <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
+            {DATA.map((row, rowIndex) => (
+              <div key={rowIndex} role="row" style={{ display: "contents" }}>
+                {row.map((cell, cellIndex) => (
+                  <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                ))}
+              </div>
+            ))}
+          </StyledTable>
+        </StyledBody>
+      </Card>
 
-      <h2>Winner Data</h2>
-      <ul>{winner}</ul>
+      {makerSignatures
+        ?.map(m => {
+          // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
+          return [
+            "Use",
+            "Home odds",
+            "Away odds",
+            "Limit",
+            "Deadline",
+            <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
+              Use this makerSignature
+            </Button>,
+            m.homeTeamOdds,
+            m.awayTeamOdds,
+            m.limit,
+            new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+          ];
+        })
+        .map((row, rowIndex) => (
+          <Card
+            key={rowIndex}
+            title={"Market #" + makerSignatures[rowIndex].id}
+            overrides={{ Root: { style: { display: "contents" } } }}
+          >
+            <StyledBody>
+              <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
+                {row.map((cell, cellIndex) => (
+                  <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                ))}
+              </StyledTable>
+            </StyledBody>
+          </Card>
+        ))}
 
-      <h2>Markets makerSignature</h2>
-      <ul>
-        {makerSignatures
-          ?.map(m => {
-            return m;
-          })
-          .map((makerSignature, index) => (
-            <li key={index}>
-              <code>
-                {JSON.stringify(makerSignature, (key, value) =>
-                  typeof value === "bigint" ? value.toString() + "n" : value,
-                )}
-              </code>
-              <p>
-                <button onClick={() => setMakerSignatureId(makerSignature.id)}>Use this makerSignature</button>
-              </p>
-            </li>
-          ))}
-      </ul>
       {makerSignatureId && tokenAddress && (
         <TakeSig
           event={event}
@@ -234,22 +291,37 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
         />
       )}
 
-      <h2>Markets</h2>
-      <ul>
-        {markets
-          .map(m => {
-            // debugger;
-            const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
-            return { maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets };
-          })
-          .map((market, index) => (
-            <li key={index}>
-              <code>
-                {JSON.stringify(market, (key, value) => (typeof value === "bigint" ? value.toString() + "n" : value))}
-              </code>
-            </li>
-          ))}
-      </ul>
+      {markets
+        ?.map(m => {
+          // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
+          return [
+            "Maker",
+            "Home odds",
+            "Away odds",
+            "Limit",
+            "Deadline",
+            "Bets",
+            m.maker,
+            m.homeTeamOdds.toString(),
+            m.awayTeamOdds.toString(),
+            m.limit.toString(),
+            new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+            <Button key={m.id} onClick={() => console.log("this bets:", m.bets)}>
+              Log {m.bets.length}
+            </Button>,
+          ];
+        })
+        .map((row, rowIndex) => (
+          <Card key={rowIndex} title={"Open Market"} overrides={{ Root: { style: { display: "contents" } } }}>
+            <StyledBody>
+              <StyledTable role="grid" $gridTemplateColumns="repeat(6,1fr)">
+                {row.map((cell, cellIndex) => (
+                  <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                ))}
+              </StyledTable>
+            </StyledBody>
+          </Card>
+        ))}
     </div>
   );
 };
