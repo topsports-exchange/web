@@ -21,6 +21,10 @@ contract MockEuroe is ERC20, Ownable, ERC20Permit {
         _mint(to, amount);
     }
     
+    function decimals() public view virtual override returns (uint8) {
+        return 6;
+    }
+
     function freemint(address to, uint256 amount) public {
         _mint(to, amount);
     }
