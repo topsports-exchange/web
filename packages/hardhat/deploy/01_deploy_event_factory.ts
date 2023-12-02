@@ -1,6 +1,14 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import * as fs from "fs";
+import axios from "axios";
+
+// const { eventId, displayName, deadline, address, eventDate } = req.body;
+async function postToApi(payload: { [key: string]: string }): Promise<void> {
+  const apiUrl = "http://localhost:3000/api/createDeployedEvent";
+  const response = await axios.post(apiUrl, payload);
+  console.log("API Response:", response.data);
+}
 
 /**
  * Deploys a contract named "TopsportsEventFactory" using the deployer account and
@@ -56,16 +64,17 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   const eventId = 401548411; // https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard/401548411
   // const AVALANCHE_FUJI_EUROE_ADDR = '0xA089a21902914C3f3325dBE2334E9B466071E5f1';
   const source = "XXX TODO XXX";
+  const deadline = 0; // TODO
   const initializeData = eventFactory.interface.encodeFunctionData(fragment, [
     eventId,
-    0,
+    deadline,
     MockEuroe.address,
     TopsportsFunctionsConsumer.address,
     hre.ethers.utils.solidityKeccak256(["string"], [source]),
   ]);
   // "date":"2023-08-12T17:00Z","name":"Tennessee Titans at Chicago Bears","shortName":"TEN @ CHI"
-  const name = "Tennessee Titans at Chicago Bears";
-  const salt = saltEvent(eventId, name);
+  const displayName = "Tennessee Titans at Chicago Bears";
+  const salt = saltEvent(eventId, displayName);
   const factoryContract = TopsportsEventFactory;
   // const factoryContract = await hre.ethers.getContractAt(
   //   'TopsportsEventFactory',
@@ -79,6 +88,14 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
 
   const tx = await factoryContract.createInstance(salt, initializeData);
   console.log(`  [createInstance] tx-hash:${tx.hash} tx-type:${tx.type}`);
+
+  await postToApi({
+    eventId: eventId.toString(),
+    displayName,
+    deadline: deadline.toString(),
+    address: contractAddr,
+    eventDate: "2023-08-12T00:00:00Z",
+  });
 };
 
 export default deployTopsportsEventFactory;
