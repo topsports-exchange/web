@@ -1,6 +1,61 @@
 import localFont from "@next/font/local";
 import { NextPage } from "next";
 
+const sportsCategories = [
+  "NFL",
+  "Soccer",
+  "Basketball",
+  "Baseball",
+  "Boxing",
+  "Golf",
+  // Add more sports as needed
+];
+
+const mockData = [
+  {
+    team1Logo: "team1LogoUrl",
+    team1Name: "Team 1",
+    team2Logo: "team2LogoUrl",
+    team2Name: "Team 2",
+    matchTime: "12:00 PM",
+    markets: 5,
+  },
+  {
+    team1Logo: "team1LogoUrl",
+    team1Name: "Team 1",
+    team2Logo: "team2LogoUrl",
+    team2Name: "Team 2",
+    matchTime: "12:00 PM",
+    markets: 5,
+  },
+  {
+    team1Logo: "team1LogoUrl",
+    team1Name: "Team 1",
+    team2Logo: "team2LogoUrl",
+    team2Name: "Team 2",
+    matchTime: "12:00 PM",
+    markets: 5,
+  },
+  {
+    team1Logo: "team1LogoUrl",
+    team1Name: "Team 1",
+    team2Logo: "team2LogoUrl",
+    team2Name: "Team 2",
+    matchTime: "12:00 PM",
+    markets: 5,
+  },
+  // Add more objects for more cards
+];
+
+interface BetItemCardProps {
+  team1Logo: string;
+  team1Name: string;
+  team2Logo: string;
+  team2Name: string;
+  matchTime: string;
+  markets: number;
+  isLive?: boolean;
+}
 const sportypo = localFont({
   src: [
     {
@@ -14,301 +69,112 @@ const sportypo = localFont({
   ],
   variable: "--font-sportypo",
 });
+const Header = () => <div className="text-center py-4 text-3xl font-bold text-green-400">TOPSPORTSEXCHANGE</div>;
+
+const SportsList = () => (
+  <div className="bg-gray-800 text-white w-48 h-full rounded-2xl p-4 flex flex-col">
+    {sportsCategories.map((category, index) => (
+      <a key={index} href="#" className="hover:bg-gray-700 p-2 rounded-md my-1">
+        {category}
+      </a>
+    ))}
+  </div>
+);
+const BetItemCard = ({ data }: { data: BetItemCardProps }) => {
+  return (
+    <div className="bg-gray-900 text-white p-4 rounded-2xl m-2 flex flex-col justify-between">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          {/* Replace with actual path to team logos */}
+          <img className="w-8 h-8 mr-2" src={data.team1Logo} alt={`${data.team1Name} Logo`} />
+          <span className="font-bold">{data.team1Name}</span>
+        </div>
+        <div className={`px-3 py-1 rounded-full ${data.isLive ? "bg-red-600" : "bg-gray-600"}`}>
+          {data.isLive ? "Live" : "Upcoming"}
+        </div>
+      </div>
+      <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center">
+          {/* Replace with actual path to team logos */}
+          <img className="w-8 h-8 mr-2" src={data.team2Logo} alt={`${data.team2Name} Logo`} />
+          <span className="font-bold">{data.team2Name}</span>
+        </div>
+        <div className="text-gray-400">{data.matchTime}</div>
+      </div>
+      <div className="bg-green-700 text-white px-3 py-1 rounded-full w-max self-end mt-2">{data.markets} markets »</div>
+    </div>
+  );
+};
+const BetList = () => (
+  <div className="flex-1 flex flex-wrap justify-start items-start grid grid-cols-2 gap-4">
+    {mockData.map((data, index) => (
+      <BetItemCard key={index} data={data} />
+    ))}
+  </div>
+);
+const WeekList = () => (
+  <div className="flex justify-center items-center my-4 space-x-2">
+    {/* Iterate over an array of weeks. This is just an example, you can replace it with your actual weeks data. */}
+    {["All", "Week 7", "Week 8", "Week 9", "Week 10", "Week 11", "Week 12"].map((week, index) => (
+      <button
+        key={index}
+        className={`px-4 py-2 rounded-full ${
+          week === "All" ? "bg-green-700 text-white" : "bg-gray-700 text-gray-300"
+        } hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50`}
+      >
+        {week}
+      </button>
+    ))}
+  </div>
+);
+const WalletConnect = () => (
+  <div className="bg-red-900 text-white w-48 h-44 rounded-2xl p-4 flex flex-col justify-between">
+    <div className="font-semibold">Wallet</div>
+    <div className="text-sm">Address: 0xa5...92cc</div>
+    <button className="bg-green-500 px-4 py-2 rounded-full">Connect Wallet</button>
+  </div>
+);
+const CustomHeader = () => (
+  <div className="bg-black text-white flex justify-between items-center p-4">
+    <div className="flex items-center">
+      {/* Logo and Title */}
+      <img src="/path-to-your-logo.png" alt="TopSports Exchange Logo" className="h-12 mr-4" />
+      <span className="text-2xl font-bold">TOPSPORTSEXCHANGE</span>
+    </div>
+    <div className="flex items-center">
+      {/* Match of the Day or other central header content */}
+      <div className="bg-green-500 text-white rounded-lg p-4 mr-4">
+        <span className="text-lg">MATCH OF THE DAY</span>
+        {/* Add more content here as needed */}
+      </div>
+      {/* Wallet Connect or other user-related info */}
+      <div className="bg-green-600 text-white rounded-full px-6 py-2">
+        <span>0xa5...92cc</span>
+      </div>
+    </div>
+  </div>
+);
 const TestPage: NextPage = () => (
-  <div className={` w-96 h-96 relative bg-zinc-950`}>
-    <div className="w-96 h-96 left-0 top-0 absolute bg-emerald-400 bg-opacity-40 rounded-full" />
-    <div className="w-96 h-96 left-[880px] top-[277px] absolute bg-emerald-400 bg-opacity-40 rounded-full" />
-    <div className="w-48 h-96 left-[32px] top-[197px] absolute bg-neutral-950 rounded-2xl" />
-    <div className="w-96 h-44 left-[1043px] top-[197px] absolute bg-neutral-950 rounded-2xl" />
-    <div className="w-20 h-11 left-[255px] top-[401px] absolute">
-      <div className="w-20 h-11 left-0 top-0 absolute bg-neutral-950 rounded-full" />
-      <div className="left-[30px] top-[10px] absolute text-white text-base font-medium font-['Exo 2'] leading-normal">
-        All
+  <div className="min-h-screen bg-zinc-950 text-white">
+    {/* Header Component - Uncomment if you have the component */}
+    {/* <Header /> */}
+
+    <div className="flex flex-col md:flex-row min-h-screen bg-zinc-950 text-white">
+      {/* Sidebar: SportsList */}
+      <div className="w-full md:w-1/4 xl:w-1/5 p-4">
+        <SportsList />
       </div>
-    </div>
-    <div className="left-[1067px] top-[258px] absolute text-slate-400 text-base font-medium font-['Exo 2'] leading-normal">
-      Connect your wallet to access your bets
-    </div>
-    <div className="left-[48px] top-[221px] absolute text-slate-400 text-base font-bold font-['Exo 2'] leading-normal">
-      Sports
-    </div>
-    <div className="w-24 h-11 left-[575px] top-[401px] absolute">
-      <div className="w-24 h-11 left-0 top-0 absolute bg-neutral-950 rounded-full" />
-      <div className="left-[21px] top-[10px] absolute text-center text-white text-base font-medium font-['Exo 2'] leading-normal">
-        Week 9
+
+      {/* Main content area */}
+      <div className="flex-1 p-4">
+        <Header />
+        <WeekList />
+        <BetList />
       </div>
-    </div>
-    <div className="w-24 h-11 left-[351px] top-[401px] absolute">
-      <div className="w-24 h-11 left-0 top-0 absolute bg-gradient-to-r from-emerald-400 to-green-500 rounded-full" />
-      <div className="left-[21px] top-[10px] absolute text-center text-neutral-900 text-base font-medium font-['Exo 2'] leading-normal">
-        Week 7
-      </div>
-    </div>
-    <div className="w-24 h-11 left-[463px] top-[401px] absolute">
-      <div className="w-24 h-11 left-0 top-0 absolute bg-neutral-950 rounded-full" />
-      <div className="left-[21px] top-[10px] absolute text-center text-white text-base font-medium font-['Exo 2'] leading-normal">
-        Week 8
-      </div>
-    </div>
-    <div className="w-24 h-11 left-[687px] top-[401px] absolute">
-      <div className="w-24 h-11 left-0 top-0 absolute bg-neutral-950 rounded-full" />
-      <div className="left-[18px] top-[10px] absolute text-center text-white text-base font-medium font-['Exo 2'] leading-normal">
-        Week 10
-      </div>
-    </div>
-    <div className="w-24 h-11 left-[799px] top-[401px] absolute">
-      <div className="w-24 h-11 left-0 top-0 absolute bg-neutral-950 rounded-full" />
-      <div className="left-[20px] top-[10px] absolute text-center text-white text-base font-medium font-['Exo 2'] leading-normal">
-        Week 11
-      </div>
-    </div>
-    <div className="w-24 h-11 left-[911px] top-[401px] absolute">
-      <div className="w-24 h-11 left-0 top-0 absolute bg-neutral-950 rounded-full" />
-      <div className="left-[18px] top-[10px] absolute text-center text-white text-base font-medium font-['Exo 2'] leading-normal">
-        Week 12
-      </div>
-    </div>
-    <div className="left-[48px] top-[269px] absolute">
-      <div className="w-5 h-5 left-0 top-[2px] absolute flex-col justify-start items-start inline-flex" />
-      <div className="left-[28px] top-0 absolute text-emerald-400 text-lg font-semibold font-['Exo 2'] leading-normal">
-        NFL
-      </div>
-    </div>
-    <div className="left-[48px] top-[549px] absolute">
-      <div className="w-5 h-5 left-0 top-[2px] absolute flex-col justify-start items-start inline-flex" />
-      <div className="left-[28px] top-0 absolute text-slate-400 text-lg font-medium font-['Exo 2'] leading-normal">
-        Golf
-      </div>
-    </div>
-    <div className="left-[48px] top-[493px] absolute">
-      <div className="w-5 h-5 left-0 top-[2px] absolute flex-col justify-start items-start inline-flex">
-        <div className="w-3 h-4 relative"></div>
-      </div>
-      <div className="left-[28px] top-0 absolute text-slate-400 text-lg font-medium font-['Exo 2'] leading-normal">
-        Boxing
-      </div>
-    </div>
-    <div className="left-[48px] top-[381px] absolute">
-      <div className="w-5 h-5 left-0 top-[2px] absolute flex-col justify-start items-start inline-flex" />
-      <div className="left-[28px] top-0 absolute text-slate-400 text-lg font-medium font-['Exo 2'] leading-normal">
-        Basketball
-      </div>
-    </div>
-    <div className="left-[48px] top-[437px] absolute">
-      <div className="w-5 h-5 left-0 top-[2px] absolute flex-col justify-start items-start inline-flex">
-        <div className="w-4 h-4 relative"></div>
-      </div>
-      <div className="left-[28px] top-0 absolute text-slate-400 text-lg font-medium font-['Exo 2'] leading-normal">
-        Baseball
-      </div>
-    </div>
-    <div className="left-[48px] top-[325px] absolute">
-      <div className="w-5 h-5 left-0 top-[2px] absolute flex-col justify-start items-start inline-flex" />
-      <div className="left-[28px] top-0 absolute text-slate-400 text-lg font-medium font-['Exo 2'] leading-normal">
-        Soccer
-      </div>
-    </div>
-    <div className="w-2 h-8 left-[219px] top-[265px] absolute bg-gradient-to-b from-emerald-400 to-green-500 rounded-tl-lg rounded-bl-lg" />
-    <img className="w-96 h-44 left-[255px] top-[197px] absolute rounded-lg" src="https://via.placeholder.com/760x180" />
-    <div className="w-96 h-40 left-[255px] top-[641px] absolute">
-      <div className="w-96 h-40 left-0 top-0 absolute bg-neutral-950 rounded-lg" />
-      <div className="left-[16px] top-[116px] absolute text-slate-400 text-base font-medium font-['Exo 2'] leading-normal">
-        Sept 13, 8:30 PM
-      </div>
-      <div className="left-[56px] top-[20px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        Los Angeles Rams
-      </div>
-      <div className="left-[56px] top-[68px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        Chicago Bears
-      </div>
-      <img className="w-8 h-8 left-[16px] top-[64px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      <img className="w-8 h-8 left-[16px] top-[16px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      <div className="w-32 h-10 left-[224px] top-[100px] absolute">
-        <div className="w-32 h-10 left-0 top-0 absolute opacity-10 bg-gradient-to-r from-emerald-400 via-cyan-400 to-green-500 rounded-full" />
-        <div className="left-[14px] top-[8px] absolute text-white text-base font-semibold font-['Exo 2'] leading-normal">
-          4 markets
-        </div>
-        <div className="w-5 h-5 left-[94px] top-[12px] absolute">
-          <img className="w-3.5 h-3 left-[3.75px] top-[3.75px] absolute" src="https://via.placeholder.com/14x12" />
-        </div>
-      </div>
-    </div>
-    <div className="w-96 h-40 left-[255px] top-[461px] absolute">
-      <div className="w-96 h-40 left-0 top-0 absolute bg-neutral-950 rounded-lg" />
-      <div className="left-[16px] top-[116px] absolute text-slate-400 text-base font-medium font-['Exo 2'] leading-normal">
-        Sept 12, 7:30 PM
-      </div>
-      <div className="w-20 h-8 left-[272px] top-[16px] absolute">
-        <div className="w-20 h-8 left-0 top-0 absolute bg-gradient-to-r from-red-600 to-rose-600 rounded" />
-        <div className="left-[37px] top-[4px] absolute text-white text-base font-medium font-['Exo 2'] leading-normal">
-          Live
-        </div>
-        <div className="w-5 h-5 left-[13px] top-[6px] absolute" />
-      </div>
-      <div className="left-[56px] top-[20px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        Detroit Lions
-      </div>
-      <div className="left-[56px] top-[68px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        San Francisco 49ers
-      </div>
-      <div className="w-32 h-10 left-[224px] top-[100px] absolute">
-        <div className="w-32 h-10 left-0 top-0 absolute opacity-10 bg-gradient-to-r from-emerald-400 via-cyan-400 to-green-500 rounded-full" />
-        <div className="left-[14px] top-[8px] absolute text-white text-base font-semibold font-['Exo 2'] leading-normal">
-          4 markets
-        </div>
-        <div className="w-5 h-5 left-[94px] top-[12px] absolute">
-          <img className="w-3.5 h-3 left-[3.75px] top-[3.75px] absolute" src="https://via.placeholder.com/14x12" />
-        </div>
-      </div>
-      <img className="w-8 h-8 left-[16px] top-[16px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      <img className="w-8 h-8 left-[16px] top-[64px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-    </div>
-    <div className="left-[287px] top-[221px] absolute text-neutral-900 text-3xl font-semibold font-['Exo 2']">
-      $100 welcome bonus
-    </div>
-    <div className="left-[287px] top-[267px] absolute text-neutral-900 text-lg font-normal font-['Exo 2']">
-      Risk free betting once you sign-up!
-    </div>
-    <div className="w-10 h-2 left-[619px] top-[353px] absolute">
-      <div className="w-2 h-2 left-0 top-0 absolute bg-emerald-800 rounded-full" />
-      <div className="w-2 h-2 left-[16px] top-0 absolute bg-emerald-500 rounded-full" />
-      <div className="w-2 h-2 left-[32px] top-0 absolute bg-emerald-500 rounded-full" />
-    </div>
-    <div className="w-36 h-44 left-[881.11px] top-[108px] absolute origin-top-left rotate-[16.70deg] opacity-20" />
-    <div className="left-[814px] top-[289px] absolute opacity-40 text-neutral-900 text-xl font-medium font-['Sportypo'] leading-loose">
-      TOP OFFER
-    </div>
-    <div className="left-[814px] top-[337px] absolute opacity-40 text-xl font-medium font-['Sportypo'] leading-loose">
-      TOP OFFER
-    </div>
-    <div className="left-[814px] top-[313px] absolute opacity-40 text-xl font-medium font-['Sportypo'] leading-loose">
-      TOP OFFER
-    </div>
-    <div className="w-40 h-10 left-[287px] top-[313px] absolute">
-      <div className="w-40 h-10 left-0 top-0 absolute bg-neutral-900 rounded-full shadow" />
-      <div className="left-[16px] top-[8px] absolute text-white text-base font-semibold font-['Exo 2'] leading-normal">
-        Start Betting
-      </div>
-      <div className="w-5 h-5 left-[120px] top-[10px] absolute" />
-    </div>
-    <div className="w-48 h-14 left-[1126px] top-[298px] absolute">
-      <div className="w-48 h-14 left-0 top-0 absolute bg-gradient-to-r from-emerald-400 to-green-500 rounded-full shadow" />
-      <div className="w-40 h-6 left-[21px] top-[16px] absolute">
-        <div className="left-[32px] top-0 absolute text-neutral-900 text-lg font-semibold font-['Exo 2'] leading-normal">
-          Connect Wallet
-        </div>
-        <div className="w-6 h-6 left-0 top-0 absolute opacity-80 flex-col justify-start items-start inline-flex">
-          <div className="w-5 h-4 relative"></div>
-        </div>
-      </div>
-    </div>
-    <div className="left-[1067px] top-[221px] absolute text-neutral-50 text-2xl font-bold font-['Exo 2']">Your</div>
-    <div className="left-[1123px] top-[221px] absolute text-emerald-400 text-2xl font-bold font-['Exo 2']">Bets</div>
-    <div className="w-96 h-40 left-[255px] top-[821px] absolute">
-      <div className="w-96 h-40 left-0 top-0 absolute bg-neutral-950 rounded-lg" />
-      <div className="left-[16px] top-[116px] absolute text-slate-400 text-base font-medium font-['Exo 2'] leading-normal">
-        Sept 14, 7:30 PM
-      </div>
-      <div className="left-[56px] top-[20px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        Kansas City Chiefs
-      </div>
-      <div className="left-[56px] top-[68px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        Los Angeles Chargers
-      </div>
-      <img className="w-8 h-8 left-[16px] top-[16px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      <img className="w-8 h-8 left-[16px] top-[64px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      <div className="w-32 h-10 left-[224px] top-[100px] absolute">
-        <div className="w-32 h-10 left-0 top-0 absolute opacity-10 bg-gradient-to-r from-emerald-400 via-cyan-400 to-green-500 rounded-full" />
-        <div className="left-[15px] top-[8px] absolute text-white text-base font-semibold font-['Exo 2'] leading-normal">
-          5 markets
-        </div>
-        <div className="w-5 h-5 left-[93px] top-[12px] absolute">
-          <img className="w-3.5 h-3 left-[3.75px] top-[3.75px] absolute" src="https://via.placeholder.com/14x12" />
-        </div>
-      </div>
-    </div>
-    <div className="w-96 h-40 left-[647px] top-[641px] absolute">
-      <div className="w-96 h-40 left-0 top-0 absolute bg-neutral-950 rounded-lg" />
-      <div className="left-[16px] top-[116px] absolute text-slate-400 text-base font-medium font-['Exo 2'] leading-normal">
-        Sept 14, 10:30 PM
-      </div>
-      <div className="left-[56px] top-[20px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        Houston Texans
-      </div>
-      <div className="left-[56px] top-[68px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        Arizona Cardinals
-      </div>
-      <img className="w-8 h-8 left-[16px] top-[16px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      <img className="w-8 h-8 left-[16px] top-[64px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      <div className="w-32 h-10 left-[224px] top-[100px] absolute">
-        <div className="w-32 h-10 left-0 top-0 absolute opacity-10 bg-gradient-to-r from-emerald-400 via-cyan-400 to-green-500 rounded-full" />
-        <div className="left-[12px] top-[8px] absolute text-white text-base font-semibold font-['Exo 2'] leading-normal">
-          11 markets
-        </div>
-        <div className="w-5 h-5 left-[95px] top-[12px] absolute">
-          <img className="w-3.5 h-3 left-[3.75px] top-[3.75px] absolute" src="https://via.placeholder.com/14x12" />
-        </div>
-      </div>
-    </div>
-    <div className="w-96 h-40 left-[647px] top-[461px] absolute">
-      <div className="w-96 h-40 left-0 top-0 absolute bg-neutral-950 rounded-lg" />
-      <div className="left-[16px] top-[116px] absolute text-slate-400 text-base font-medium font-['Exo 2'] leading-normal">
-        Sept 12, 10:30 PM
-      </div>
-      <div className="w-40 h-8 left-[16px] top-[16px] absolute">
-        <div className="left-[40px] top-[4px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-          New York Jets
-        </div>
-        <img className="w-8 h-8 left-0 top-0 absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      </div>
-      <div className="w-44 h-8 left-[16px] top-[64px] absolute">
-        <div className="left-[40px] top-[4px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-          Dallas Cowboys
-        </div>
-        <img className="w-8 h-8 left-0 top-0 absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      </div>
-      <div className="w-20 h-5 left-[268px] top-[22px] absolute">
-        <div className="w-4 h-4 left-0 top-[2px] absolute flex-col justify-start items-start inline-flex" />
-        <div className="left-[20px] top-0 absolute text-white text-base font-medium font-['Exo 2']">Trending</div>
-      </div>
-      <div className="w-32 h-10 left-[224px] top-[100px] absolute">
-        <div className="w-32 h-10 left-0 top-0 absolute opacity-10 bg-gradient-to-r from-emerald-400 via-cyan-400 to-green-500 rounded-full" />
-        <div className="left-[14px] top-[8px] absolute text-white text-base font-semibold font-['Exo 2'] leading-normal">
-          8 markets
-        </div>
-        <div className="w-5 h-5 left-[93px] top-[12px] absolute">
-          <img className="w-3.5 h-3 left-[3.75px] top-[3.75px] absolute" src="https://via.placeholder.com/14x12" />
-        </div>
-      </div>
-    </div>
-    <div className="w-96 h-40 left-[647px] top-[821px] absolute">
-      <div className="w-96 h-40 left-0 top-0 absolute bg-neutral-950 rounded-lg" />
-      <div className="left-[16px] top-[116px] absolute text-slate-400 text-base font-medium font-['Exo 2'] leading-normal">
-        Sept 15, 10:30 PM
-      </div>
-      <div className="left-[56px] top-[20px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        Las Vegas Raiders
-      </div>
-      <div className="left-[56px] top-[68px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        New York Giants
-      </div>
-      <img className="w-8 h-8 left-[16px] top-[16px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      <img className="w-8 h-8 left-[16px] top-[64px] absolute rounded-full" src="https://via.placeholder.com/32x32" />
-      <div className="w-32 h-10 left-[224px] top-[100px] absolute">
-        <div className="w-32 h-10 left-0 top-0 absolute opacity-10 bg-gradient-to-r from-emerald-400 via-cyan-400 to-green-500 rounded-full" />
-        <div className="left-[12px] top-[8px] absolute text-white text-base font-semibold font-['Exo 2'] leading-normal">
-          12 markets
-        </div>
-        <div className="w-5 h-5 left-[97px] top-[12px] absolute">
-          <img className="w-3.5 h-3 left-[3.75px] top-[3.75px] absolute" src="https://via.placeholder.com/14x12" />
-        </div>
-      </div>
-    </div>
-    <div className="w-72 left-[32px] top-[93px] absolute">
-      <div className="w-20 h-20 left-0 top-0 absolute"></div>
-      <div className={`${sportypo.variable} w-48 left-[80px] top-[14px] absolute`}>
-        <span className="text-emerald-400 text-xl font-medium leading-relaxed">TOPSPORTS</span>
-        <span className="text-white text-xl font-medium --font-sportypo leading-relaxed">EXCHANGE</span>
+
+      {/* Right sidebar: WalletConnect */}
+      <div className="w-full md:w-1/4 xl:w-1/5 p-4">
+        <WalletConnect />
       </div>
     </div>
   </div>
