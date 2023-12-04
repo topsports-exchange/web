@@ -19,8 +19,9 @@ import deployedContractsData from "~~/contracts/deployedContracts";
 
 const prisma = new PrismaClient();
 
-interface MakerSignatureNormalized extends Omit<MakerSignature, "deadlineNormalized"> {
+interface MakerSignatureNormalized extends Omit<MakerSignature, "eventDate" | "deadlineNormalized"> {
   deadlineNormalized: string;
+  eventDate: string;
 }
 interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "deadline"> {
   eventDate: Date | string;
@@ -46,7 +47,7 @@ interface Competitor {
   };
 }
 
-interface EventData {
+interface EventDisplayDetails {
   name: string;
   shortName: string;
   fullName: string;
@@ -86,7 +87,7 @@ const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
     functionName: "placeBet",
     // TopsportsEventCore.placeBet(100, EventWinner.HOME_TEAM, 100, -200, sigData.limit, sigData.deadline, contractAddr, signature);
     args: [
-      BigInt(100),
+      BigInt(100), // amount bet
       EventWinner.HOME_TEAM,
       BigInt(makerSignature.homeTeamOdds),
       BigInt(makerSignature.awayTeamOdds),
@@ -131,7 +132,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   const [markets, setMarkets] = useState<any[]>([]);
   const [makerSignatureId, setMakerSignatureId] = useState<number | null>(null);
   const [winner, setWinner] = useState(EventWinner.UNDEFINED);
-  const [eventData, setEventData] = useState<EventData | null>(null);
+  const [eventDisplayDetails, setEventDisplayDetails] = useState<EventDisplayDetails | null>(null);
 
   useEffect(() => {
     if (!event) {
@@ -153,7 +154,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
               (competitor: Competitor) => competitor.homeAway === "away",
             );
 
-            setEventData({
+            setEventDisplayDetails({
               name: json.name,
               shortName: json.shortName,
               fullName: json.name,
@@ -177,7 +178,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
         }
       }
     };
-    const fetchContractEventId = async () => {
+    const fetchContractEvent = async () => {
       try {
         // TODO
         const provider = new JsonRpcProvider("http://127.0.0.1:8545");
@@ -186,42 +187,35 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
           deployedContractsData[31337].TopsportsEventCore.abi,
           provider,
         );
-
-        const contractEventId = await TopsportsEventCore.eventId();
-        setContractEventId(contractEventId);
-
-        setTokenAddress(await TopsportsEventCore.token());
-
         const markets = await TopsportsEventCore.getAllMarkets();
         console.log("markets", markets);
         setMarkets(markets);
-
-        const winner = await TopsportsEventCore.winner();
-        console.log("winner", winner);
-        setWinner(winner);
+        setTokenAddress(await TopsportsEventCore.token());
+        setWinner(await TopsportsEventCore.winner());
+        setContractEventId((await TopsportsEventCore.eventId()).toString());
       } catch (error) {
         console.error("Error reading the TopsportsEventCore at the address to verify eventId:", error);
       }
     };
     fetchDataFromApi();
-    fetchContractEventId();
+    fetchContractEvent();
   }, [eventId, event]);
 
-  if (!event || !eventData) {
+  if (!event || !eventDisplayDetails || !contractEventId) {
     return <div>Event not found</div>;
   }
 
   const DATA = [
-    ["Name", eventData.name],
-    ["Short Name", eventData.shortName],
-    ["Full Name", eventData.fullName],
-    ["Venue", `${eventData.venue.fullName}, ${eventData.venue.city}`],
-    ["Home Team", eventData.homeTeamName],
-    ["Away Team", eventData.awayTeamName],
-    ["Status Name", eventData.status.name],
-    ["Status Completed", eventData.status.completed ? "Yes" : "No"],
-    ["Status Period", eventData.status?.period?.toString()],
-    ["Winner", winner === EventWinner.HOME_TEAM ? eventData.homeTeamName : eventData.awayTeamName],
+    ["Name", eventDisplayDetails.name],
+    ["Short Name", eventDisplayDetails.shortName],
+    ["Full Name", eventDisplayDetails.fullName],
+    ["Venue", `${eventDisplayDetails.venue.fullName}, ${eventDisplayDetails.venue.city}`],
+    ["Home Team", eventDisplayDetails.homeTeamName],
+    ["Away Team", eventDisplayDetails.awayTeamName],
+    ["Status Name", eventDisplayDetails.status.name],
+    ["Status Completed", eventDisplayDetails.status.completed ? "Yes" : "No"],
+    ["Status Period", eventDisplayDetails.status?.period?.toString()],
+    ["Winner", winner === EventWinner.HOME_TEAM ? eventDisplayDetails.homeTeamName : eventDisplayDetails.awayTeamName],
   ];
 
   return (
@@ -335,8 +329,8 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
   }
   try {
     let event;
-    const mockEvent = true;
-    const mockSigs = true;
+    const mockEvent = 1;
+    const mockSigs = 1;
     if (!mockEvent) {
       // XXX findUnique
       event = await prisma.deployedEvent.findFirst({
@@ -378,6 +372,7 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
           awayTeamOddsNormalized: -200,
           limitNormalized: 789,
           deadlineNormalized: new Date("2023-12-08T19:42:16.000Z"),
+          eventDate: new Date("2023-08-12T00:00:00.000Z"),
         },
       ];
     }
@@ -397,6 +392,7 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
         makerSignatures: makerSignatures.map(makerSignature => ({
           ...makerSignature,
           deadlineNormalized: makerSignature.deadlineNormalized.toJSON(),
+          eventDate: makerSignature.eventDate.toJSON(),
         })),
       },
     };
