@@ -23,9 +23,6 @@ contract TopsportsMakerCore is Initializable, EIP712, Nonces, Ownable {
     error ExpiredSignature(uint256 deadline);
     error InvalidSigner(address signer, address owner);
 
-    error UnknownError();
-    error AlreadyClaimed();
-
     // EIP-712 typed structured data signature
     bytes32 private constant PERMIT_TYPEHASH =
         keccak256(
@@ -106,6 +103,7 @@ contract TopsportsMakerCore is Initializable, EIP712, Nonces, Ownable {
         uint64 _deadline,
         bytes calldata _signature
     ) external {
+        // solhint-disable-next-line not-rely-on-time
         if (block.timestamp > _deadline) revert ExpiredSignature(_deadline);
         address spender = _msgSender();
         bytes32 digest = _hashTypedDataV4(
@@ -144,26 +142,4 @@ contract TopsportsMakerCore is Initializable, EIP712, Nonces, Ownable {
         _useNonce(_spender);
         token.forceApprove(_spender, 0);
     }
-
-    /**
-     * @notice If the sender is the winner, this function allows them to collect the payout for a bet on a market of a
-     * given event. The payout can be transferred to a different address than the message sender.
-     *
-     * @param _eventAddr The address of the event contract.
-     * @param _marketId The ID of the market where the bet has been placed.
-     * @param _betId The ID of the bet within the list of bets placed in that market.
-     * @param _to The address of the receiver of the payout.
-     * @return payout The total amount of the payout, including the original stake and any profit.
-     */
-    function collectOne(
-        address _eventAddr,
-        uint256 _marketId,
-        uint256 _betId,
-        address _to
-    ) external onlyOwner returns (uint256 payout) {
-        EventCore eventCore = EventCore(_eventAddr);
-        payout = eventCore.collectOne(_marketId, _betId, _to);
-    }
-
-    //TODO: add collectAll() helper function
 }
