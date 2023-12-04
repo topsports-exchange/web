@@ -6,8 +6,13 @@ import axios from "axios";
 // const { eventId, displayName, deadline, address, eventDate } = req.body;
 async function postToApi(payload: { [key: string]: string }): Promise<void> {
   const apiUrl = "http://localhost:3000/api/createDeployedEvent";
-  const response = await axios.post(apiUrl, payload);
-  console.log("API Response:", response.data);
+  try {
+    const response = await axios.post(apiUrl, payload);
+    console.log("API Response:", response);
+    console.log("API Response:", response.data);
+  } catch (error) {
+    console.error("Error posting to API:", (error as any).response.data.error);
+  }
 }
 
 /**
@@ -74,6 +79,7 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   ]);
   // "date":"2023-08-12T17:00Z","name":"Tennessee Titans at Chicago Bears","shortName":"TEN @ CHI"
   const displayName = "Tennessee Titans at Chicago Bears";
+  const eventDate = "2023-08-12T00:00:00Z"; // TODO from espn
   const salt = saltEvent(eventId, displayName);
   const factoryContract = TopsportsEventFactory;
   // const factoryContract = await hre.ethers.getContractAt(
@@ -94,7 +100,7 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
     displayName,
     deadline: deadline.toString(),
     address: contractAddr,
-    eventDate: "2023-08-12T00:00:00Z",
+    eventDate,
   });
 };
 
