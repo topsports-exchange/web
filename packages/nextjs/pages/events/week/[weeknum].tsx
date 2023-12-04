@@ -61,10 +61,13 @@ const WeekPage = ({ weekNumber, events }: WeekProps) => {
           </Link>
         ))}
       </div>
-      {events.map((event, idx) => (
+      {events?.map((event, idx) => (
         <Card key={idx}>
           <StyledBody>
-            <p>{event.displayName}</p>
+            <p>
+              {/* {event.displayName} */}
+              <Link href={`/events/${event.eventId}`}>{event.displayName}</Link>
+            </p>
             <p>{event.eventDate}</p>
             <p>Count of Markets: {event.count}</p>
           </StyledBody>
@@ -118,7 +121,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
       weekNumber,
       // events: formattedEvents,
       // fake 5 e of data
-      events: Array(5).fill(formattedEvents[0]),
+      events: formattedEvents.length > 0 ? Array(5).fill(formattedEvents[0]) : [],
     },
   };
 };
