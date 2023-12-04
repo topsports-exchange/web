@@ -4,6 +4,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 interface CreateSignatureRequest {
   maker: string;
+  eventDate: string;
   spender: string;
   homeTeamOdds: string;
   awayTeamOdds: string;
@@ -18,8 +19,17 @@ const prisma = new PrismaClient();
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
     try {
-      const { maker, spender, homeTeamOdds, awayTeamOdds, limit, nonce, deadline, signature }: CreateSignatureRequest =
-        req.body;
+      const {
+        maker,
+        eventDate,
+        spender,
+        homeTeamOdds,
+        awayTeamOdds,
+        limit,
+        nonce,
+        deadline,
+        signature,
+      }: CreateSignatureRequest = req.body;
 
       // TODO Verify signature
 
@@ -35,6 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const createdSignature = await prisma.makerSignature.create({
         data: {
           maker,
+          eventDate: new Date(eventDate),
           spender,
           homeTeamOdds,
           awayTeamOdds,
