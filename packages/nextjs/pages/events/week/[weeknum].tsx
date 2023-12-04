@@ -1,10 +1,13 @@
 // pages/events/week/[weeknum].tsx
 import Link from "next/link";
 import { DeployedEvent, PrismaClient } from "@prisma/client";
+import { withStyle } from "baseui";
+import { Card, StyledBody } from "baseui/card";
 import {
-  Card,
-  StyledBody, // StyledAction
-} from "baseui/card";
+  // StyledHeadCell,
+  StyledBodyCell,
+  StyledTable,
+} from "baseui/table-grid";
 import { GetServerSideProps } from "next";
 
 interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "deadline"> {
@@ -45,34 +48,49 @@ const WeekPage = ({ weekNumber, events }: WeekProps) => {
   // console.log('events', events);
   // const thisWeek = getWeekNumberFromDate(new Date());
   const thisWeek = weekNumber;
-  const weeks = Array(5)
+  const weeks = Array(6)
     .fill(null)
     .map((_, i) => i + thisWeek);
+  const StyledEventBodyCell = withStyle(StyledBodyCell, {
+    border: "1px solid black",
+    margin: "10px",
+  });
   return (
     <div>
-      <div>
+      <div className="block mx-auto m-12">
         {weeks.map((week, index) => (
           <Link
+            className={
+              "text-center p-4 m-2 mx-2 border-solid rounded-lg " +
+              (week === weekNumber ? "bg-black text-white" : "bg-white text-black")
+            }
             key={index}
             href={`/events/week/${week}`}
-            style={{ marginRight: "10px", fontWeight: week === weekNumber ? "bold" : "normal" }}
           >
             Week {week}
           </Link>
         ))}
       </div>
-      {events?.map((event, idx) => (
-        <Card key={idx}>
-          <StyledBody>
-            <p>
-              {/* {event.displayName} */}
-              <Link href={`/events/${event.eventId}`}>{event.displayName}</Link>
-            </p>
-            <p>{event.eventDate}</p>
-            <p>Count of Markets: {event.count}</p>
-          </StyledBody>
+      <div>
+        <Card title="This Week">
+          <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
+            {events?.map((event, idx) => (
+              <StyledEventBodyCell key={idx}>
+                <StyledBody>
+                  <Link
+                    className="underline text-blue-600 hover:text-blue-800 visited:text-purple-600"
+                    href={`/events/${event.eventId}`}
+                  >
+                    {event.displayName}
+                  </Link>
+                  <p>{event.eventDate}</p>
+                  <p>Markets: {event.count}</p>
+                </StyledBody>
+              </StyledEventBodyCell>
+            ))}
+          </StyledTable>
         </Card>
-      ))}
+      </div>
     </div>
   );
 };
