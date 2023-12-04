@@ -33,6 +33,8 @@ model MakerSignature {
   awayTeamOddsNormalized Int
   limitNormalized       Int
   deadlineNormalized    DateTime
+
+  eventDate   DateTime  // denormal DeployedEvent
 }
 
 model DeployedEvent {
