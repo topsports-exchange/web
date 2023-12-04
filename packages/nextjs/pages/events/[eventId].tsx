@@ -337,45 +337,45 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
         where: { eventId },
       });
     } else {
-      const eventJSON = {
-        id: 1,
+      event = {
+        id: 3,
         eventId: "401548411",
         displayName: "Tennessee Titans at Chicago Bears",
-        eventDate: "2023-08-12T00:00:00.000Z",
-        deadline: "1970-01-01T00:00:00.000Z",
-        address: "0x9a359cdf40C4bcc94FbBf893b23DDD56e10E032c",
+        eventDate: new Date("2023-08-12T00:00:00.000Z"),
+        deadline: new Date("1970-01-01T00:00:00.000Z"),
+        address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
         salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
       };
-      event = { ...eventJSON, eventDate: new Date(eventJSON.eventDate), deadline: new Date(eventJSON.deadline) };
     }
+    // console.log("event:", event);
 
     let makerSignatures: MakerSignature[];
     if (!mockSigs) {
       makerSignatures = await prisma.makerSignature.findMany({
         where: { spender: event?.address },
       });
-      // console.log("makerSignature.findMany:", makerSignatures);
     } else {
       makerSignatures = [
         {
-          id: 7,
-          maker: "0xFf4c45EcD0C66664fd72F1d7772bb93AFB47eBb0",
-          spender: "0x9a359cdf40C4bcc94FbBf893b23DDD56e10E032c",
+          id: 12,
+          maker: "0x53EA15882246211fd4CCbe1C52A487437575A9f9",
+          spender: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
           homeTeamOdds: "100",
           awayTeamOdds: "-200",
           limit: "789",
           nonce: "0",
-          deadline: "1702064536",
+          deadline: "1702287620",
           signature:
-            "0x50cf045ab5c0d0c236145a80cf58c7697582fc0873817622704f91e1ed12df9940f51ce0eee1258c1d38150735302e42f354cbf76c404c38f0a00fb76842733e1c",
+            "0xcbfa28de852fd3e166eef749da1c8185278cce1c0056ad328a05d8dd97ee86b25eeb92530e942ede1339b4a40520686746073ebb782aa7335c6cbb1b51f09b711b",
           homeTeamOddsNormalized: 100,
           awayTeamOddsNormalized: -200,
           limitNormalized: 789,
-          deadlineNormalized: new Date("2023-12-08T19:42:16.000Z"),
+          deadlineNormalized: new Date("2023-12-11T09:40:20.000Z"),
           eventDate: new Date("2023-08-12T00:00:00.000Z"),
         },
       ];
     }
+    // console.log("makerSignatures:", makerSignatures);
 
     // Pass the massaged event data to the page component as props
     return {
