@@ -6,8 +6,13 @@ import axios from "axios";
 // const { eventId, displayName, deadline, address, eventDate } = req.body;
 async function postToApi(payload: { [key: string]: string }): Promise<void> {
   const apiUrl = "http://localhost:3000/api/createDeployedEvent";
-  const response = await axios.post(apiUrl, payload);
-  console.log("API Response:", response.data);
+  try {
+    const response = await axios.post(apiUrl, payload);
+    // console.log("API Response:", response);
+    console.log("API Response:", response.data);
+  } catch (error) {
+    console.error("Error posting to API:", (error as any).response.data.error);
+  }
 }
 
 /**
@@ -64,16 +69,17 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   const eventId = 401548411; // https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard/401548411
   // const AVALANCHE_FUJI_EUROE_ADDR = '0xA089a21902914C3f3325dBE2334E9B466071E5f1';
   const source = "XXX TODO XXX";
-  const deadline = 0; // TODO
+  const startdate = 0; // TODO
   const initializeData = eventFactory.interface.encodeFunctionData(fragment, [
     eventId,
-    deadline,
+    startdate,
     MockEuroe.address,
     TopsportsFunctionsConsumer.address,
     hre.ethers.utils.solidityKeccak256(["string"], [source]),
   ]);
   // "date":"2023-08-12T17:00Z","name":"Tennessee Titans at Chicago Bears","shortName":"TEN @ CHI"
   const displayName = "Tennessee Titans at Chicago Bears";
+  const eventDate = "2023-08-12T00:00:00Z"; // TODO from espn
   const salt = saltEvent(eventId, displayName);
   const factoryContract = TopsportsEventFactory;
   // const factoryContract = await hre.ethers.getContractAt(
@@ -92,9 +98,9 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   await postToApi({
     eventId: eventId.toString(),
     displayName,
-    deadline: deadline.toString(),
+    deadline: startdate.toString(), // TODO schema
     address: contractAddr,
-    eventDate: "2023-08-12T00:00:00Z",
+    eventDate,
   });
 };
 

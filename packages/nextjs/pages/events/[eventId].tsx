@@ -19,8 +19,9 @@ import deployedContractsData from "~~/contracts/deployedContracts";
 
 const prisma = new PrismaClient();
 
-interface MakerSignatureNormalized extends Omit<MakerSignature, "deadlineNormalized"> {
+interface MakerSignatureNormalized extends Omit<MakerSignature, "eventDate" | "deadlineNormalized"> {
   deadlineNormalized: string;
+  eventDate: string;
 }
 interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "deadline"> {
   eventDate: Date | string;
@@ -46,7 +47,7 @@ interface Competitor {
   };
 }
 
-interface EventData {
+interface EventDisplayDetails {
   name: string;
   shortName: string;
   fullName: string;
@@ -86,7 +87,7 @@ const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
     functionName: "placeBet",
     // TopsportsEventCore.placeBet(100, EventWinner.HOME_TEAM, 100, -200, sigData.limit, sigData.deadline, contractAddr, signature);
     args: [
-      BigInt(100),
+      BigInt(100), // amount bet
       EventWinner.HOME_TEAM,
       BigInt(makerSignature.homeTeamOdds),
       BigInt(makerSignature.awayTeamOdds),
@@ -131,7 +132,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   const [markets, setMarkets] = useState<any[]>([]);
   const [makerSignatureId, setMakerSignatureId] = useState<number | null>(null);
   const [winner, setWinner] = useState(EventWinner.UNDEFINED);
-  const [eventData, setEventData] = useState<EventData | null>(null);
+  const [eventDisplayDetails, setEventDisplayDetails] = useState<EventDisplayDetails | null>(null);
 
   useEffect(() => {
     if (!event) {
@@ -153,7 +154,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
               (competitor: Competitor) => competitor.homeAway === "away",
             );
 
-            setEventData({
+            setEventDisplayDetails({
               name: json.name,
               shortName: json.shortName,
               fullName: json.name,
@@ -177,7 +178,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
         }
       }
     };
-    const fetchContractEventId = async () => {
+    const fetchContractEvent = async () => {
       try {
         // TODO
         const provider = new JsonRpcProvider("http://127.0.0.1:8545");
@@ -186,42 +187,35 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
           deployedContractsData[31337].TopsportsEventCore.abi,
           provider,
         );
-
-        const contractEventId = await TopsportsEventCore.eventId();
-        setContractEventId(contractEventId);
-
-        setTokenAddress(await TopsportsEventCore.token());
-
         const markets = await TopsportsEventCore.getAllMarkets();
         console.log("markets", markets);
         setMarkets(markets);
-
-        const winner = await TopsportsEventCore.winner();
-        console.log("winner", winner);
-        setWinner(winner);
+        setTokenAddress(await TopsportsEventCore.token());
+        setWinner(await TopsportsEventCore.winner());
+        setContractEventId((await TopsportsEventCore.eventId()).toString());
       } catch (error) {
         console.error("Error reading the TopsportsEventCore at the address to verify eventId:", error);
       }
     };
     fetchDataFromApi();
-    fetchContractEventId();
+    fetchContractEvent();
   }, [eventId, event]);
 
-  if (!event || !eventData) {
+  if (!event || !eventDisplayDetails || !contractEventId) {
     return <div>Event not found</div>;
   }
 
   const DATA = [
-    ["Name", eventData.name],
-    ["Short Name", eventData.shortName],
-    ["Full Name", eventData.fullName],
-    ["Venue", `${eventData.venue.fullName}, ${eventData.venue.city}`],
-    ["Home Team", eventData.homeTeamName],
-    ["Away Team", eventData.awayTeamName],
-    ["Status Name", eventData.status.name],
-    ["Status Completed", eventData.status.completed ? "Yes" : "No"],
-    ["Status Period", eventData.status?.period?.toString()],
-    ["Winner", winner === EventWinner.HOME_TEAM ? eventData.homeTeamName : eventData.awayTeamName],
+    ["Name", eventDisplayDetails.name],
+    ["Short Name", eventDisplayDetails.shortName],
+    ["Full Name", eventDisplayDetails.fullName],
+    ["Venue", `${eventDisplayDetails.venue.fullName}, ${eventDisplayDetails.venue.city}`],
+    ["Home Team", eventDisplayDetails.homeTeamName],
+    ["Away Team", eventDisplayDetails.awayTeamName],
+    ["Status Name", eventDisplayDetails.status.name],
+    ["Status Completed", eventDisplayDetails.status.completed ? "Yes" : "No"],
+    ["Status Period", eventDisplayDetails.status?.period?.toString()],
+    ["Winner", winner === EventWinner.HOME_TEAM ? eventDisplayDetails.homeTeamName : eventDisplayDetails.awayTeamName],
   ];
 
   return (
@@ -335,52 +329,53 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
   }
   try {
     let event;
-    const mockEvent = true;
-    const mockSigs = true;
+    const mockEvent = 1;
+    const mockSigs = 1;
     if (!mockEvent) {
       // XXX findUnique
       event = await prisma.deployedEvent.findFirst({
         where: { eventId },
       });
     } else {
-      const eventJSON = {
-        id: 1,
+      event = {
+        id: 3,
         eventId: "401548411",
         displayName: "Tennessee Titans at Chicago Bears",
-        eventDate: "2023-08-12T00:00:00.000Z",
-        deadline: "1970-01-01T00:00:00.000Z",
-        address: "0x9a359cdf40C4bcc94FbBf893b23DDD56e10E032c",
+        eventDate: new Date("2023-08-12T00:00:00.000Z"),
+        deadline: new Date("1970-01-01T00:00:00.000Z"),
+        address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
         salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
       };
-      event = { ...eventJSON, eventDate: new Date(eventJSON.eventDate), deadline: new Date(eventJSON.deadline) };
     }
+    // console.log("event:", event);
 
     let makerSignatures: MakerSignature[];
     if (!mockSigs) {
       makerSignatures = await prisma.makerSignature.findMany({
         where: { spender: event?.address },
       });
-      // console.log("makerSignature.findMany:", makerSignatures);
     } else {
       makerSignatures = [
         {
-          id: 7,
-          maker: "0xFf4c45EcD0C66664fd72F1d7772bb93AFB47eBb0",
-          spender: "0x9a359cdf40C4bcc94FbBf893b23DDD56e10E032c",
+          id: 12,
+          maker: "0x53EA15882246211fd4CCbe1C52A487437575A9f9",
+          spender: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
           homeTeamOdds: "100",
           awayTeamOdds: "-200",
           limit: "789",
           nonce: "0",
-          deadline: "1702064536",
+          deadline: "1702287620",
           signature:
-            "0x50cf045ab5c0d0c236145a80cf58c7697582fc0873817622704f91e1ed12df9940f51ce0eee1258c1d38150735302e42f354cbf76c404c38f0a00fb76842733e1c",
+            "0xcbfa28de852fd3e166eef749da1c8185278cce1c0056ad328a05d8dd97ee86b25eeb92530e942ede1339b4a40520686746073ebb782aa7335c6cbb1b51f09b711b",
           homeTeamOddsNormalized: 100,
           awayTeamOddsNormalized: -200,
           limitNormalized: 789,
-          deadlineNormalized: new Date("2023-12-08T19:42:16.000Z"),
+          deadlineNormalized: new Date("2023-12-11T09:40:20.000Z"),
+          eventDate: new Date("2023-08-12T00:00:00.000Z"),
         },
       ];
     }
+    // console.log("makerSignatures:", makerSignatures);
 
     // Pass the massaged event data to the page component as props
     return {
@@ -397,6 +392,7 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
         makerSignatures: makerSignatures.map(makerSignature => ({
           ...makerSignature,
           deadlineNormalized: makerSignature.deadlineNormalized.toJSON(),
+          eventDate: makerSignature.eventDate.toJSON(),
         })),
       },
     };

@@ -11,6 +11,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 
 import {ITopsportsMakerCore as MakerCore} from "./interfaces/ITopsportsMakerCore.sol";
 import {ITopsportsFunctionsConsumer as FunctionsConsumer} from "./interfaces/ITopsportsFunctionsConsumer.sol";
+import {ITopsportsEventFactory as EventFactory} from "./interfaces/ITopsportsEventFactory.sol";
 
 // This contract encapsulates the logic for an event, with one contract deployed for each event. Once deployed, the contract operates in a trustless manner and lacks owner logic.
 // An event may have zero to many markets, and each market can host zero to many bets. Placing a bet resembles a taker order on a market created earlier by a market maker.
@@ -48,24 +49,25 @@ contract TopsportsEventCore is Initializable, Context {
         uint256 totalAwayPayout;
     }
 
-    error Expired();
-    error UnknownError();
-    error AlreadyClaimed();
     event PlaceBet();
     event ResolveEvent();
+    event ResolvedEvent(uint256);
 
+    error ResolutionError(bytes err);
     error InvalidResolver();
-
     error ExpiredSignature(uint256 deadline);
     error UnexpectedRequestID(bytes32 requestId);
     error UnauthorizedConsumer(address consumer);
+    error EventNotResolved(uint256 winner);
+    error InvalidWinner(uint256 winner);
 
     // Immutable variables
     uint64 public eventId;
-    uint64 public deadline; // event start time
+    uint64 public startdate; // event scheduled time
     IERC20 public token; // stake token
     FunctionsConsumer public consumer;
     bytes32 private resolverHash; // hash of the source run by cl functions
+    EventFactory private eventFactory; // factory contract that created this clone
 
     // State variables
     Market[] public markets;
@@ -92,22 +94,26 @@ contract TopsportsEventCore is Initializable, Context {
      * which is used to check if a market exists.
      *
      * @param _eventId The ID of the sport event in the external sport data provider API.
-     * @param _deadline The date after when users can reclaim their funds if the event has not been settled by the external sport data provider.
+     * @param _startdate The date after when users can reclaim their funds if the event has not been settled by the external sport data provider.
      * @param _token The address of the token that is wagered, usually a stablecoin.
      * @param _consumer The address of the consumer contract, responsible for sending requests and receiving responses from Chainlink regarding the outcome of the event.
      */
     function initialize(
         uint64 _eventId,
-        uint64 _deadline,
+        uint64 _startdate,
         address _token,
         address _consumer,
         bytes32 _resolverHash
     ) external initializer {
         eventId = _eventId;
-        deadline = _deadline;
+        startdate = _startdate;
         token = IERC20(_token);
         consumer = FunctionsConsumer(_consumer);
         resolverHash = _resolverHash;
+
+        // helper to serve the front-end display
+        eventFactory = EventFactory(_msgSender());
+        eventFactory.registerEvent(eventId);
     }
 
     /**
@@ -174,6 +180,7 @@ contract TopsportsEventCore is Initializable, Context {
         }
 
         Market storage market = markets[marketId];
+        // solhint-disable-next-line not-rely-on-time
         if (market.deadline < block.timestamp) revert ExpiredSignature(_deadline);
         uint256 profit = getProfit(
             _stake,
@@ -187,16 +194,27 @@ contract TopsportsEventCore is Initializable, Context {
         Bet memory bet = Bet(_msgSender(), _stake, profit, _winner);
         market.bets.push(bet);
 
+        // helper to serve the front-end display
+        eventFactory.registerBet(
+            _msgSender(),
+            eventId,
+            startdate,
+            marketId,
+            market.bets.length - 1
+        );
+
+        address makerOwner = MakerCore(_maker).owner();
         wagerByAddress[_msgSender()].totalWagered += _stake;
-        wagerByAddress[_maker].totalWagered += profit;
+        wagerByAddress[makerOwner].totalWagered += profit;
+        uint256 payout = _stake + profit;
         if (_winner == EventWinner.HOME_TEAM) {
-            wagerByAddress[_msgSender()].totalHomePayout += _stake + profit;
-            wagerByAddress[_maker].totalAwayPayout += _stake + profit;
+            wagerByAddress[_msgSender()].totalHomePayout += payout;
+            wagerByAddress[makerOwner].totalAwayPayout += payout;
         } else if (_winner == EventWinner.AWAY_TEAM) {
-            wagerByAddress[_msgSender()].totalAwayPayout += _stake + profit;
-            wagerByAddress[_maker].totalAwayPayout += _stake + profit;
+            wagerByAddress[_msgSender()].totalAwayPayout += payout;
+            wagerByAddress[makerOwner].totalHomePayout += payout;
         } else {
-            // revert
+            revert InvalidWinner(uint256(_winner));
         }
 
         emit PlaceBet();
@@ -267,32 +285,32 @@ contract TopsportsEventCore is Initializable, Context {
      *
      * @dev Only callable by the FunctionsConsumer contract to ensure proper access control.
      */
+
     function resolutionCallback(
         bytes32 _requestId,
         bytes memory _response,
         bytes memory _err
     ) external onlyConsumer {
         if (lastRequestId != _requestId) revert UnexpectedRequestID(_requestId);
-
         // 2. Check that err is empty
-        if (_err.length > 0) revert UnknownError();
-
+        if (_err.length > 0) revert ResolutionError(_err);
         // 3. Set winner
         uint256 resolution = abi.decode(_response, (uint256));
         if (
-            (uint256(EventWinner.UNDEFINED) > resolution) &&
+            (uint256(EventWinner.UNDEFINED) < resolution) &&
             (resolution <= uint256(EventWinner.AWAY_TEAM))
         ) {
             winner = EventWinner(resolution);
         } else {
-            // emit UnresolvedEvent();
+            revert EventNotResolved(resolution);
         }
 
-        emit ResolveEvent();
+        emit ResolvedEvent(resolution);
     }
 
     function collect(address _to) external returns (uint256 amount) {
-        if ((deadline + 24 hours > block.timestamp) && (winner == EventWinner.UNDEFINED)) {
+        // solhint-disable-next-line not-rely-on-time
+        if ((startdate + 24 hours > block.timestamp) && (winner == EventWinner.UNDEFINED)) {
             // Event completed without resolution of the event, release stake and
             // profit to their respective owners
             amount = wagerByAddress[_msgSender()].totalWagered;
@@ -303,10 +321,10 @@ contract TopsportsEventCore is Initializable, Context {
             } else if (EventWinner.AWAY_TEAM == winner) {
                 amount = wagerByAddress[_msgSender()].totalAwayPayout;
             } else {
-                // revert
+                revert EventNotResolved(uint256(winner));
             }
         }
-        token.safeTransferFrom(address(this), _to, amount);
+        token.safeTransfer(_to, amount);
         delete (wagerByAddress[_msgSender()]);
 
         // Uncomment the following line if you want to emit a Claimed event

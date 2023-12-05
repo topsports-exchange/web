@@ -11,6 +11,7 @@ import {ITopsportsEventCore as EventCore} from "./interfaces/ITopsportsEventCore
 contract TopsportsFunctionsConsumer is FunctionsClient, ConfirmedOwner, Context {
     using FunctionsRequest for FunctionsRequest.Request;
 
+    // keep this for debug purpose
     bytes32 public lastRequestId;
     bytes public lastResponse;
     bytes public lastError;
@@ -22,7 +23,9 @@ contract TopsportsFunctionsConsumer is FunctionsClient, ConfirmedOwner, Context 
 
     mapping(bytes32 => address) public requestIdToEventContract;
 
-    constructor(address router) FunctionsClient(router) ConfirmedOwner(_msgSender()) {}
+    constructor(address router) FunctionsClient(router) ConfirmedOwner(_msgSender()) {
+        // solhint-disable-previous-line no-empty-blocks
+    }
 
     function sendRequest(
         string memory _source,
@@ -30,17 +33,13 @@ contract TopsportsFunctionsConsumer is FunctionsClient, ConfirmedOwner, Context 
         uint64 _subscriptionId,
         uint32 _gasLimit,
         bytes32 _donID
-    ) external returns (bytes32 requestId) {
+    ) external returns (bytes32) {
         FunctionsRequest.Request memory req;
         req.initializeRequestForInlineJavaScript(_source);
         if (_args.length > 0) req.setArgs(_args);
         lastRequestId = _sendRequest(req.encodeCBOR(), _subscriptionId, _gasLimit, _donID);
-
-        //address eventContract = abi.decode(bytesArgs[0], (address));
         requestIdToEventContract[lastRequestId] = _msgSender();
-        //emit EventContract(eventContract);
-
-        return lastRequestId;
+        return lastRequestId; // keep lastRequestId for debug purpose
     }
 
     /**
@@ -55,11 +54,7 @@ contract TopsportsFunctionsConsumer is FunctionsClient, ConfirmedOwner, Context 
         bytes memory _response,
         bytes memory _err
     ) internal override {
-        /*  if (s_lastRequestId != requestId) {
-            revert UnexpectedRequestID(requestId);
-        } */
-
-        // useless. keeping for debug purpose
+        // keep this for debug purpose
         lastResponse = _response;
         lastError = _err;
 

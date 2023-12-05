@@ -9,4 +9,6 @@ interface ITopsportsMakerCore {
         uint64 _deadline,
         bytes calldata _signature
     ) external;
+
+    function owner() external view returns (address);
 }
