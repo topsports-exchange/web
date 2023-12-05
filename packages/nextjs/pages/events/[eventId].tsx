@@ -10,8 +10,9 @@ import {
   StyledBodyCell,
   StyledTable,
 } from "baseui/table-grid";
-import { Contract, JsonRpcProvider } from "ethers";
 import { GetServerSideProps } from "next";
+import { usePublicClient } from "wagmi";
+import { erc20ABI } from "wagmi";
 import { useContractWrite } from "wagmi";
 import deployedContractsData from "~~/contracts/deployedContracts";
 
@@ -71,13 +72,11 @@ enum EventWinner {
 }
 
 const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
-  // TODO generic erc20 abi
-  const MockEuroe = deployedContractsData[31337].MockEuroe;
   const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
 
   const { write: approveWrite } = useContractWrite({
     address: tokenAddress,
-    abi: MockEuroe.abi,
+    abi: erc20ABI,
     functionName: "approve",
     args: [event.address, BigInt(100)],
   });
@@ -126,6 +125,7 @@ const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
 
 const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   const router = useRouter();
+  const publicClient = usePublicClient();
   const { eventId } = router.query;
   const [contractEventId, setContractEventId] = useState<string | null>(null);
   const [tokenAddress, setTokenAddress] = useState<`0x${string}` | null>(null);
@@ -180,19 +180,22 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
     };
     const fetchContractEvent = async () => {
       try {
-        // TODO
-        const provider = new JsonRpcProvider("http://127.0.0.1:8545");
-        const TopsportsEventCore = new Contract(
-          event.address,
-          deployedContractsData[31337].TopsportsEventCore.abi,
-          provider,
-        );
-        const markets = await TopsportsEventCore.getAllMarkets();
-        console.log("markets", markets);
-        setMarkets(markets);
-        setTokenAddress(await TopsportsEventCore.token());
-        setWinner(await TopsportsEventCore.winner());
-        setContractEventId((await TopsportsEventCore.eventId()).toString());
+        const readEventContract = async (
+          functionName: "eventId" | "winner" | "token" | "consumer" | "getAllMarkets" | "markets" | "startdate",
+        ) => {
+          const result = await publicClient.readContract({
+            address: event.address,
+            abi: deployedContractsData[31337].TopsportsEventCore.abi,
+            functionName: functionName,
+          });
+          console.log(`Result for function ${functionName}:`, result);
+          return result;
+        };
+
+        setMarkets((await readEventContract("getAllMarkets")) as any[]);
+        setTokenAddress((await readEventContract("token")) as `0x${string}`);
+        setWinner((await readEventContract("winner")) as EventWinner);
+        setContractEventId((await readEventContract("eventId")).toString());
       } catch (error) {
         console.error("Error reading the TopsportsEventCore at the address to verify eventId:", error);
       }
