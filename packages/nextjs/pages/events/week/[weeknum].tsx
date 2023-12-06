@@ -9,6 +9,7 @@ import {
   StyledTable,
 } from "baseui/table-grid";
 import { GetServerSideProps } from "next";
+import MyBets from "~~/components/MyBets";
 
 interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "deadline"> {
   eventDate: string;
@@ -71,6 +72,9 @@ const WeekPage = ({ weekNumber, events }: WeekProps) => {
           </Link>
         ))}
       </div>
+
+      <MyBets />
+
       <div>
         <Card title="This Week">
           <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
