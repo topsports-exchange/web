@@ -69,7 +69,7 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   const eventId = 401548411; // https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard/401548411
   // const AVALANCHE_FUJI_EUROE_ADDR = '0xA089a21902914C3f3325dBE2334E9B466071E5f1';
   const source = "XXX TODO XXX";
-  const startdate = 0; // TODO
+  const startdate = Math.floor(new Date("2023-08-12T00:00:00Z").valueOf() / 1000); // TODO
   const initializeData = eventFactory.interface.encodeFunctionData(fragment, [
     eventId,
     startdate,
@@ -94,6 +94,21 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
 
   const tx = await factoryContract.createInstance(salt, initializeData);
   console.log(`  [createInstance] tx-hash:${tx.hash} tx-type:${tx.type}`);
+
+  const resolveImmediately = false;
+  if (resolveImmediately) {
+    const AWAY_TEAM = 2n;
+    const TopsportsEventCore = await hre.ethers.getContractAt("TopsportsEventCore", contractAddr, deployer);
+
+    console.log("eventId", await TopsportsEventCore.eventId());
+    await TopsportsEventCore.resolutionCallback(
+      "0x0000000000000000000000000000000000000000000000000000000000000000",
+      hre.ethers.utils.solidityPack(["int256"], [AWAY_TEAM]),
+      "0x",
+    );
+    console.log("resolved winner", await TopsportsEventCore.winner());
+    throw new Error("stop");
+  }
 
   await postToApi({
     eventId: eventId.toString(),
