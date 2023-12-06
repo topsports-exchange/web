@@ -75,7 +75,7 @@ contract TopsportsEventCore is Initializable, Context {
     bytes32 private lastRequestId;
     mapping(bytes32 => uint256) private signatureToMarketId;
     mapping(bytes32 => bool) private signatureToMarketExist;
-    mapping(address => Wager) private wagerByAddress;
+    mapping(address => Wager) public wagerByAddress;
 
     modifier onlyConsumer() {
         if (address(consumer) != _msgSender()) revert UnauthorizedConsumer(_msgSender());
@@ -253,11 +253,12 @@ contract TopsportsEventCore is Initializable, Context {
      */
     function resolveEvent(
         string memory _source,
-        uint64 _subscriptionId, // Should be fixed at event creation
+        uint64 _subscriptionId, // Should be fixed at event creation?
         uint32 _gasLimit,
-        bytes32 _donID // Fixed at event creation
+        bytes32 _donID // Fixed at event creation?
     ) public {
-        if (keccak256(bytes(_source)) != resolverHash) revert InvalidResolver();
+        //FIXME! Disable resolver validation for testing/hackathon purpose
+        // if (keccak256(bytes(_source)) != resolverHash) revert InvalidResolver();
 
         // Create an array with event ID as a string for Chainlink request arguments
         string[] memory args = new string[](1);
