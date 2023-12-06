@@ -332,20 +332,20 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
   }
   try {
     let event;
-    const mockEvent = 1;
-    const mockSigs = 1;
+    const mockEvent = 0;
+    const mockSigs = 0;
     if (!mockEvent) {
       // XXX findUnique
-      event = await prisma.deployedEvent.findFirst({
+      event = await prisma.deployedEvent.findUnique({
         where: { eventId },
       });
     } else {
       event = {
-        id: 3,
+        id: 5,
         eventId: "401548411",
         displayName: "Tennessee Titans at Chicago Bears",
         eventDate: new Date("2023-08-12T00:00:00.000Z"),
-        deadline: new Date("1970-01-01T00:00:00.000Z"),
+        deadline: new Date("2023-08-12T00:00:00.000Z"),
         address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
         salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
       };
@@ -360,20 +360,20 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
     } else {
       makerSignatures = [
         {
-          id: 12,
+          id: 15,
           maker: "0x53EA15882246211fd4CCbe1C52A487437575A9f9",
           spender: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
           homeTeamOdds: "100",
           awayTeamOdds: "-200",
           limit: "789",
           nonce: "0",
-          deadline: "1702287620",
+          deadline: "1702478296",
           signature:
-            "0xcbfa28de852fd3e166eef749da1c8185278cce1c0056ad328a05d8dd97ee86b25eeb92530e942ede1339b4a40520686746073ebb782aa7335c6cbb1b51f09b711b",
+            "0x8d4e3d8459ea2c432e6c21099809bc641a68d84df255fec50f329727070d53d434d75ddd4c6acc7658b51ac10675168ab6c06b8a1b669f302a39e60b419cfa511c",
           homeTeamOddsNormalized: 100,
           awayTeamOddsNormalized: -200,
           limitNormalized: 789,
-          deadlineNormalized: new Date("2023-12-11T09:40:20.000Z"),
+          deadlineNormalized: new Date("2023-12-13T14:38:16.000Z"),
           eventDate: new Date("2023-08-12T00:00:00.000Z"),
         },
       ];
