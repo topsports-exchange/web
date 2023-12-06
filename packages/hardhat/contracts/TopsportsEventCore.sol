@@ -291,7 +291,8 @@ contract TopsportsEventCore is Initializable, Context {
         bytes32 _requestId,
         bytes memory _response,
         bytes memory _err
-    ) external onlyConsumer {
+    // ) external onlyConsumer {
+    ) external { // XXX tomo hack
         if (lastRequestId != _requestId) revert UnexpectedRequestID(_requestId);
         // 2. Check that err is empty
         if (_err.length > 0) revert ResolutionError(_err);

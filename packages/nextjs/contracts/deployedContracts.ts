@@ -1148,6 +1148,35 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "wagerByAddress",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "totalWagered",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "totalHomePayout",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "totalAwayPayout",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [],
           name: "winner",
           outputs: [
