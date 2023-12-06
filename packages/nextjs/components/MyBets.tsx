@@ -1,15 +1,22 @@
 // src/components/MyBets.tsx
 import React, { useEffect, useState } from "react";
 import { withStyle } from "baseui";
+import { Button } from "baseui/button";
 import { Card, StyledBody } from "baseui/card";
 import {
   // StyledHeadCell,
   StyledBodyCell,
   StyledTable,
 } from "baseui/table-grid";
-import { usePublicClient } from "wagmi";
+import { useContractWrite, usePublicClient } from "wagmi";
 import { useAccount } from "wagmi";
 import deployedContractsData from "~~/contracts/deployedContracts";
+
+enum EventWinner {
+  UNDEFINED,
+  HOME_TEAM,
+  AWAY_TEAM,
+}
 
 interface BetInfo {
   eventId: bigint;
@@ -44,10 +51,38 @@ eventcache["401548411"] = {
   salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
 };
 
+// TODO bet both?
+const claimable = (totalWagered: bigint, totalHomePayout: bigint, totalAwayPayout: bigint) => {
+  if (totalHomePayout > 0) {
+    return totalHomePayout;
+  } else if (totalAwayPayout > 0) {
+    return totalAwayPayout;
+  } else {
+    return 0n;
+  }
+};
+
+const Claim = ({ eventAddress, accountAddress }: { eventAddress: string; accountAddress: string }) => {
+  const { write: claimWrite } = useContractWrite({
+    address: eventAddress,
+    abi: deployedContractsData[31337].TopsportsEventCore.abi,
+    functionName: "collect",
+    args: [accountAddress],
+  });
+  return <Button onClick={() => claimWrite}>Claim</Button>;
+};
+
 const MyBets = () => {
   const publicClient = usePublicClient();
   const account = useAccount();
   const [bets, setBets] = useState<BetInfo[]>([]);
+  const [eventWinner, setEventWinner] = useState<{ [key: string]: number }>({});
+  // struct Wager {
+  //   uint256 totalWagered;
+  //   uint256 totalHomePayout;
+  //   uint256 totalAwayPayout;
+  // }
+  const [eventWager, setEventWager] = useState<{ [key: string]: readonly [bigint, bigint, bigint] }>({});
   const [allMarkets, setAllMarkets] = useState<{
     [key: string]: readonly {
       maker: string;
@@ -124,6 +159,20 @@ const MyBets = () => {
                 [result.eventContract]: markets,
               }),
             );
+
+            const winner = await publicClient.readContract({
+              address: result.eventContract,
+              abi: deployedContractsData[31337].TopsportsEventCore.abi,
+              functionName: "winner",
+            });
+            setEventWinner(prev => ({ ...prev, [result.eventContract]: winner }));
+            const wager = await publicClient.readContract({
+              address: result.eventContract,
+              abi: deployedContractsData[31337].TopsportsEventCore.abi,
+              functionName: "wagerByAddress",
+              args: [account.address as string],
+            });
+            setEventWager(prev => ({ ...prev, [result.eventContract]: wager }));
           }
         } catch (error) {
           // ContractFunctionExecutionError: The contract function "betsByAddress" reverted with the following reason:
@@ -140,8 +189,39 @@ const MyBets = () => {
     };
     fetchContractEvent();
   }, [account.address]);
-
   console.log("allMarkets", allMarkets);
+
+  // TODO filter pending vs wins vs history
+  const Bet = ({ bet }: { bet: BetInfo }) => {
+    return (
+      <div>
+        <p>
+          {bet.eventId.toString()} {eventcache[bet.eventId.toString()].displayName}
+        </p>
+        <p>{new Date(eventcache[bet.eventId.toString()].eventDate).toString()}</p>
+        <p>
+          {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].winner == EventWinner.HOME_TEAM
+            ? "Home"
+            : "Away"}{" "}
+          wins
+        </p>
+        <p>Home {allMarkets[bet.eventContract][Number(bet.marketId)].homeTeamOdds.toString()}</p>
+        <p>Away {allMarkets[bet.eventContract][Number(bet.marketId)].awayTeamOdds.toString()}</p>
+        <p>Stake {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].stake.toString()}</p>
+        <p>Profit {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].profit.toString()}</p>
+        <p>eventWinner {eventWinner[bet.eventContract].toString()}</p>
+        <p>wagerByAddress {eventWager[bet.eventContract].toString()}</p>
+        <p>claimable {claimable(...eventWager[bet.eventContract]).toString()}</p>
+        <Claim eventAddress={bet.eventContract} accountAddress={account.address as string} />
+        {JSON.stringify(bet, (key, value) => (typeof value === "bigint" ? value.toString() : value))}
+        {eventcache[bet.eventId.toString()] && JSON.stringify(eventcache[bet.eventId.toString()])}
+        {allMarkets[bet.eventContract] &&
+          JSON.stringify(allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)], (key, value) =>
+            typeof value === "bigint" ? value.toString() : value,
+          )}
+      </div>
+    );
+  };
 
   const StyledBetBodyCell = withStyle(StyledBodyCell, {
     border: "1px solid black",
@@ -151,22 +231,28 @@ const MyBets = () => {
   return (
     <div>
       <Card title="My Bets">
-        <StyledTable role="grid" $gridTemplateColumns="repeat(1,1fr)">
-          {bets.map((bet, index) => (
-            <StyledBetBodyCell key={index}>
-              <StyledBody>
-                <p>{bet.eventId.toString()}</p>
-                {JSON.stringify(bet, (key, value) => (typeof value === "bigint" ? value.toString() : value))}
-                {eventcache[bet.eventId.toString()] && JSON.stringify(eventcache[bet.eventId.toString()])}
-                {allMarkets[bet.eventContract] &&
-                  JSON.stringify(
-                    allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)],
-                    (key, value) => (typeof value === "bigint" ? value.toString() : value),
-                  )}
-              </StyledBody>
-            </StyledBetBodyCell>
-          ))}
-        </StyledTable>
+        <Card title="Pending">
+          <StyledTable role="grid" $gridTemplateColumns="repeat(1,1fr)">
+            {bets.map((bet, index) => (
+              <StyledBetBodyCell key={index}>
+                <StyledBody>
+                  <Bet bet={bet} />
+                </StyledBody>
+              </StyledBetBodyCell>
+            ))}
+          </StyledTable>
+        </Card>
+        <Card title="History">
+          <StyledTable role="grid" $gridTemplateColumns="repeat(1,1fr)">
+            {bets.map((bet, index) => (
+              <StyledBetBodyCell key={index}>
+                <StyledBody>
+                  <Bet bet={bet} />
+                </StyledBody>
+              </StyledBetBodyCell>
+            ))}
+          </StyledTable>
+        </Card>
       </Card>
     </div>
   );
