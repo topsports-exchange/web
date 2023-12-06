@@ -39,10 +39,10 @@ model MakerSignature {
 
 model DeployedEvent {
   id          Int       @id @default(autoincrement())
-  eventId     String    // The ID of the sport event in the external sport data provider API.
+  eventId     String    @unique // ESPN API
   displayName String
   eventDate   DateTime
   deadline    DateTime  // The date after when users can reclaim their funds if the event has not been settled by the external sport data provider.
-  address     String    // contract
-  salt        String
+  address     String    @unique // contract
+  salt        String    @unique
 }
