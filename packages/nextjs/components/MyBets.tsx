@@ -188,7 +188,7 @@ const MyBets = () => {
       setBets(newBets);
     };
     fetchContractEvent();
-  }, [account.address]);
+  }, [account, allMarkets, publicClient]);
   console.log("allMarkets", allMarkets);
 
   // TODO filter pending vs wins vs history

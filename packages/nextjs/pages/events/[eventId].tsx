@@ -202,7 +202,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
     };
     fetchDataFromApi();
     fetchContractEvent();
-  }, [eventId, event]);
+  }, [eventId, event, publicClient]);
 
   if (!event || !eventDisplayDetails || !contractEventId) {
     return <div>Event not found</div>;
