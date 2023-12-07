@@ -24,9 +24,9 @@ interface MakerSignatureNormalized extends Omit<MakerSignature, "eventDate" | "d
   deadlineNormalized: string;
   eventDate: string;
 }
-interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "deadline"> {
+interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "startdate"> {
   eventDate: Date | string;
-  deadline: Date | string;
+  startdate: Date | string;
 }
 
 // o/r eventDate, deadline
@@ -335,7 +335,6 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
     const mockEvent = 0;
     const mockSigs = 0;
     if (!mockEvent) {
-      // XXX findUnique
       event = await prisma.deployedEvent.findUnique({
         where: { eventId },
       });
@@ -345,7 +344,7 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
         eventId: "401548411",
         displayName: "Tennessee Titans at Chicago Bears",
         eventDate: new Date("2023-08-12T00:00:00.000Z"),
-        deadline: new Date("2023-08-12T00:00:00.000Z"),
+        startdate: new Date("2023-08-12T00:00:00.000Z"),
         address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
         salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
       };
@@ -388,7 +387,7 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
           eventId: event?.eventId || "0",
           displayName: event?.displayName || "",
           eventDate: event?.eventDate.toJSON() || "0",
-          deadline: event?.deadline.toJSON() || "0",
+          startdate: event?.startdate.toJSON() || "0",
           address: event?.address || "0x",
           salt: event?.salt || "",
         },

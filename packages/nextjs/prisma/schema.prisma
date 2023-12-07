@@ -42,7 +42,7 @@ model DeployedEvent {
   eventId     String    @unique // ESPN API
   displayName String
   eventDate   DateTime
-  deadline    DateTime  // The date after when users can reclaim their funds if the event has not been settled by the external sport data provider.
+  startdate   DateTime  // event scheduled time
   address     String    @unique // contract
   salt        String    @unique
 }

@@ -4,7 +4,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import deployedContractsData from "~~/contracts/deployedContracts";
 
 const prisma = new PrismaClient();
-const deadlineCheck = false; // TODO enable
+const startdateCheck = false; // TODO enable
 
 function saltEvent(eventId: number, displayName: string): string {
   // const hash = ethers.utils.solidityKeccak256(['uint256', 'string'], [eventId, displayName]); // v5
@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   http://localhost:3000/api/createDeployedEvent
   */
 
-  const { eventId, displayName, deadline, address, eventDate } = req.body;
+  const { eventId, displayName, startdate, address, eventDate } = req.body;
   const salt = saltEvent(eventId, displayName);
   // TODO confirm that this salt was used to create the contract
 
@@ -54,10 +54,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // deadlineCheck: Check if the deadline is in the future
+    // startdateCheck: Check if the startdate is in the future
     const currentTimestamp = Math.floor(Date.now() / 1000);
-    if (deadlineCheck && deadline <= currentTimestamp) {
-      return res.status(400).json({ error: "Deadline must be in the future" });
+    if (startdateCheck && startdate <= currentTimestamp) {
+      return res.status(400).json({ error: "startdate must be in the future" });
     }
 
     try {
@@ -88,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         eventId,
         displayName,
         eventDate: _eventDate.toISOString(),
-        deadline: new Date(deadline * 1000),
+        startdate: new Date(startdate * 1000),
         address,
         salt,
       },
