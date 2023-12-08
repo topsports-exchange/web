@@ -1,5 +1,6 @@
 // src/components/MyBets.tsx
 import React, { useEffect, useState } from "react";
+import { Prisma } from "@prisma/client";
 import { withStyle } from "baseui";
 import { Button } from "baseui/button";
 import { Card, StyledBody } from "baseui/card";
@@ -11,6 +12,19 @@ import {
 import { useContractWrite, usePublicClient } from "wagmi";
 import { useAccount } from "wagmi";
 import deployedContractsData from "~~/contracts/deployedContracts";
+
+type deployedEvent = {
+  id: number;
+  eventId: string;
+  displayName: string;
+  eventDate: Date;
+  startdate: Date;
+  address: string;
+  salt: string;
+  venue: Prisma.JsonValue;
+  homeTeam: Prisma.JsonValue;
+  awayTeam: Prisma.JsonValue;
+};
 
 enum EventWinner {
   UNDEFINED,
@@ -39,17 +53,6 @@ const toBetInfo = ([eventId, eventContract, startdate, marketId, betId]: readonl
   marketId,
   betId,
 });
-
-const eventcache: { [key: string]: any } = {};
-eventcache["401548411"] = {
-  id: 3,
-  eventId: "401548411",
-  displayName: "Tennessee Titans at Chicago Bears",
-  eventDate: new Date("2023-08-12T00:00:00.000Z"),
-  deadline: new Date("1970-01-01T00:00:00.000Z"),
-  address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
-  salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
-};
 
 // TODO bet both?
 const claimable = (totalWagered: bigint, totalHomePayout: bigint, totalAwayPayout: bigint) => {
@@ -98,6 +101,7 @@ const MyBets = () => {
       }[];
     }[];
   }>({});
+  const [eventsDetails, setEventsDetails] = useState<{ [address: string]: deployedEvent }>({});
 
   useEffect(() => {
     console.log("account", account);
@@ -106,9 +110,11 @@ const MyBets = () => {
     }
 
     const fetchContractEvent = async () => {
-      let i = 0n;
       const newBets: BetInfo[] = [];
-      while (true) {
+      let i: bigint;
+      // i++ until Error: Transaction reverted without a reason string
+      for (i = 0n; ; i++) {
+        // while (true) {
         try {
           const result = toBetInfo(
             await publicClient.readContract({
@@ -119,8 +125,14 @@ const MyBets = () => {
             }),
           );
           console.log("result for i=", i, result);
-          i++;
+          // i++;
           newBets.push(result);
+
+          if (!eventsDetails[result.eventContract]) {
+            const response = await fetch("/api/deployedEvent?address=" + result.eventContract);
+            const event = await response.json();
+            setEventsDetails(prev => ({ ...prev, [result.eventContract]: event }));
+          }
 
           if (!allMarkets[result.eventContract]) {
             const markets: readonly {
@@ -196,9 +208,10 @@ const MyBets = () => {
     return (
       <div>
         <p>
-          {bet.eventId.toString()} {eventcache[bet.eventId.toString()].displayName}
+          {/* {bet.eventId.toString()} {eventcache[bet.eventId.toString()].displayName} */}
+          {bet.eventId.toString()} {eventsDetails[bet.eventContract].displayName}
         </p>
-        <p>{new Date(eventcache[bet.eventId.toString()].eventDate).toString()}</p>
+        <p>{new Date(eventsDetails[bet.eventContract].eventDate).toString()}</p>
         <p>
           {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].winner == EventWinner.HOME_TEAM
             ? "Home"
@@ -214,7 +227,7 @@ const MyBets = () => {
         <p>claimable {claimable(...eventWager[bet.eventContract]).toString()}</p>
         <Claim eventAddress={bet.eventContract} accountAddress={account.address as string} />
         {JSON.stringify(bet, (key, value) => (typeof value === "bigint" ? value.toString() : value))}
-        {eventcache[bet.eventId.toString()] && JSON.stringify(eventcache[bet.eventId.toString()])}
+        {/* {eventcache[bet.eventId.toString()] && JSON.stringify(eventcache[bet.eventId.toString()])} */}
         {allMarkets[bet.eventContract] &&
           JSON.stringify(allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)], (key, value) =>
             typeof value === "bigint" ? value.toString() : value,
