@@ -1,6 +1,6 @@
 // src/components/MyBets.tsx
 import React, { useEffect, useState } from "react";
-import { Prisma } from "@prisma/client";
+import { DeployedEvent } from "@prisma/client";
 import { withStyle } from "baseui";
 import { Button } from "baseui/button";
 import { Card, StyledBody } from "baseui/card";
@@ -13,25 +13,32 @@ import { useContractWrite, usePublicClient } from "wagmi";
 import { useAccount } from "wagmi";
 import deployedContractsData from "~~/contracts/deployedContracts";
 
-type deployedEvent = {
-  id: number;
-  eventId: string;
-  displayName: string;
-  eventDate: Date;
-  startdate: Date;
-  address: string;
-  salt: string;
-  venue: Prisma.JsonValue;
-  homeTeam: Prisma.JsonValue;
-  awayTeam: Prisma.JsonValue;
-};
-
 enum EventWinner {
   UNDEFINED,
   HOME_TEAM,
   AWAY_TEAM,
 }
-
+interface Bet {
+  taker: string;
+  stake: bigint;
+  profit: bigint;
+  winner: EventWinner;
+}
+interface Market {
+  address: string;
+  maker: string;
+  homeTeamOdds: bigint;
+  awayTeamOdds: bigint;
+  limit: bigint;
+  deadline: bigint;
+  bets: Bet[];
+}
+interface Wager {
+  totalWagered: bigint;
+  totalHomePayout: bigint;
+  totalAwayPayout: bigint;
+}
+type WagerArray = readonly [bigint, bigint, bigint];
 interface BetInfo {
   eventId: bigint;
   eventContract: string;
@@ -39,14 +46,27 @@ interface BetInfo {
   marketId: bigint;
   betId: bigint;
 }
+type BetInfoArray = readonly [bigint, string, bigint, bigint, bigint];
 
-const toBetInfo = ([eventId, eventContract, startdate, marketId, betId]: readonly [
-  bigint,
-  string,
-  bigint,
-  bigint,
-  bigint,
-]): BetInfo => ({
+const eventWinnerString = (winner: EventWinner): string => {
+  switch (winner) {
+    case EventWinner.HOME_TEAM:
+      return "HOME_TEAM";
+    case EventWinner.AWAY_TEAM:
+      return "AWAY_TEAM";
+    case EventWinner.UNDEFINED:
+    default:
+      return "UNDEFINED";
+  }
+};
+
+const toWager = ([totalWagered, totalHomePayout, totalAwayPayout]: WagerArray): Wager => ({
+  totalWagered,
+  totalHomePayout,
+  totalAwayPayout,
+});
+
+const toBetInfo = ([eventId, eventContract, startdate, marketId, betId]: BetInfoArray): BetInfo => ({
   eventId,
   eventContract,
   startdate,
@@ -55,7 +75,7 @@ const toBetInfo = ([eventId, eventContract, startdate, marketId, betId]: readonl
 });
 
 // TODO bet both?
-const claimable = (totalWagered: bigint, totalHomePayout: bigint, totalAwayPayout: bigint) => {
+const claimable = ({ totalHomePayout, totalAwayPayout }: Wager) => {
   if (totalHomePayout > 0) {
     return totalHomePayout;
   } else if (totalAwayPayout > 0) {
@@ -80,31 +100,11 @@ const MyBets = () => {
   const account = useAccount();
   const [bets, setBets] = useState<BetInfo[]>([]);
   const [eventWinner, setEventWinner] = useState<{ [key: string]: number }>({});
-  // struct Wager {
-  //   uint256 totalWagered;
-  //   uint256 totalHomePayout;
-  //   uint256 totalAwayPayout;
-  // }
-  const [eventWager, setEventWager] = useState<{ [key: string]: readonly [bigint, bigint, bigint] }>({});
-  const [allMarkets, setAllMarkets] = useState<{
-    [key: string]: readonly {
-      maker: string;
-      homeTeamOdds: bigint;
-      awayTeamOdds: bigint;
-      limit: bigint;
-      deadline: bigint;
-      bets: readonly {
-        taker: string;
-        stake: bigint;
-        profit: bigint;
-        winner: number;
-      }[];
-    }[];
-  }>({});
-  const [eventsDetails, setEventsDetails] = useState<{ [address: string]: deployedEvent }>({});
+  const [eventWager, setEventWager] = useState<{ [address: string]: Wager }>({});
+  const [allMarkets, setAllMarkets] = useState<{ [address: string]: Market[] }>({});
+  const [eventsDetails, setEventsDetails] = useState<{ [address: string]: DeployedEvent }>({});
 
   useEffect(() => {
-    console.log("account", account);
     if (account.address === undefined) {
       return;
     }
@@ -124,8 +124,6 @@ const MyBets = () => {
               args: [account.address as string, i],
             }),
           );
-          console.log("result for i=", i, result);
-          // i++;
           newBets.push(result);
 
           if (!eventsDetails[result.eventContract]) {
@@ -135,42 +133,14 @@ const MyBets = () => {
           }
 
           if (!allMarkets[result.eventContract]) {
-            const markets: readonly {
-              maker: string;
-              homeTeamOdds: bigint;
-              awayTeamOdds: bigint;
-              limit: bigint;
-              deadline: bigint;
-              bets: readonly {
-                taker: string;
-                stake: bigint;
-                profit: bigint;
-                winner: number;
-              }[];
-            }[] = await publicClient.readContract({
+            const markets = (await publicClient.readContract({
               // If the event contract is not in allMarkets, fetch all markets for that contract
               // const markets = await publicClient.readContract({
               address: result.eventContract,
               abi: deployedContractsData[31337].TopsportsEventCore.abi,
               functionName: "getAllMarkets",
-            });
-            setAllMarkets(
-              (prevAllMarkets: {
-                [key: string]:
-                  | any[]
-                  | readonly {
-                      maker: string;
-                      homeTeamOdds: bigint;
-                      awayTeamOdds: bigint;
-                      limit: bigint;
-                      deadline: bigint;
-                      bets: readonly { taker: string; stake: bigint; profit: bigint; winner: number }[];
-                    }[];
-              }) => ({
-                ...prevAllMarkets,
-                [result.eventContract]: markets,
-              }),
-            );
+            })) as Market[];
+            setAllMarkets(prev => ({ ...prev, [result.eventContract]: markets }));
 
             const winner = await publicClient.readContract({
               address: result.eventContract,
@@ -178,13 +148,14 @@ const MyBets = () => {
               functionName: "winner",
             });
             setEventWinner(prev => ({ ...prev, [result.eventContract]: winner }));
-            const wager = await publicClient.readContract({
+
+            const wager: WagerArray = await publicClient.readContract({
               address: result.eventContract,
               abi: deployedContractsData[31337].TopsportsEventCore.abi,
               functionName: "wagerByAddress",
               args: [account.address as string],
             });
-            setEventWager(prev => ({ ...prev, [result.eventContract]: wager }));
+            setEventWager(prev => ({ ...prev, [result.eventContract]: toWager(wager) }));
           }
         } catch (error) {
           // ContractFunctionExecutionError: The contract function "betsByAddress" reverted with the following reason:
@@ -192,40 +163,37 @@ const MyBets = () => {
           // console.error("Error", error);
           break;
         }
-        console.log("i", i);
-        // if (i > 1) {
-        //   break;
-        // }
       }
       setBets(newBets);
     };
     fetchContractEvent();
   }, [account, allMarkets, publicClient, eventsDetails]);
-  console.log("allMarkets", allMarkets);
 
   // TODO filter pending vs wins vs history
   const Bet = ({ bet }: { bet: BetInfo }) => {
     return (
       <div>
         <p>
-          {/* {bet.eventId.toString()} {eventcache[bet.eventId.toString()].displayName} */}
           {bet.eventId.toString()} {eventsDetails[bet.eventContract].displayName}
         </p>
         <p>{new Date(eventsDetails[bet.eventContract].eventDate).toString()}</p>
         <p>
-          {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].winner == EventWinner.HOME_TEAM
-            ? "Home"
-            : "Away"}{" "}
-          wins
+          Chose: {eventWinnerString(allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].winner)}
         </p>
-        <p>Home {allMarkets[bet.eventContract][Number(bet.marketId)].homeTeamOdds.toString()}</p>
-        <p>Away {allMarkets[bet.eventContract][Number(bet.marketId)].awayTeamOdds.toString()}</p>
-        <p>Stake {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].stake.toString()}</p>
-        <p>Profit {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].profit.toString()}</p>
-        <p>eventWinner {eventWinner[bet.eventContract].toString()}</p>
-        <p>wagerByAddress {eventWager[bet.eventContract].toString()}</p>
-        <p>claimable {claimable(...eventWager[bet.eventContract]).toString()}</p>
+        <p>eventWinner {eventWinnerString(eventWinner[bet.eventContract])}</p>
+        <p>Home Odds {allMarkets[bet.eventContract][Number(bet.marketId)].homeTeamOdds.toString()}</p>
+        <p>Away Odds {allMarkets[bet.eventContract][Number(bet.marketId)].awayTeamOdds.toString()}</p>
+        <p>Staked {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].stake.toString()}</p>
+        <p>Profit? {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].profit.toString()}</p>
+        <p>
+          wagerByAddress{" "}
+          {JSON.stringify(eventWager[bet.eventContract], (key, value) =>
+            typeof value === "bigint" ? value.toString() : value,
+          )}
+        </p>
+        <p>claimable {claimable({ ...eventWager[bet.eventContract] }).toString()}</p>
         <Claim eventAddress={bet.eventContract} accountAddress={account.address as string} />
+        DEBUG
         {JSON.stringify(bet, (key, value) => (typeof value === "bigint" ? value.toString() : value))}
         {/* {eventcache[bet.eventId.toString()] && JSON.stringify(eventcache[bet.eventId.toString()])} */}
         {allMarkets[bet.eventContract] &&
