@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   http://localhost:3000/api/createDeployedEvent
   */
 
-  const { eventId, displayName, startdate, address, eventDate } = req.body;
+  const { eventId, displayName, startdate, address, eventDate, venue, homeTeam, awayTeam } = req.body;
   const salt = saltEvent(eventId, displayName);
   // TODO confirm that this salt was used to create the contract
 
@@ -91,6 +91,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         startdate: new Date(startdate * 1000),
         address,
         salt,
+        venue: JSON.parse(venue),
+        homeTeam: JSON.parse(homeTeam),
+        awayTeam: JSON.parse(awayTeam),
       },
     });
 

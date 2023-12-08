@@ -110,7 +110,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const weds = getFirstDayOfWeek(weekNumber);
   // console.log('weds', weds);
   const nextWeds = getFirstDayOfWeek(weekNumber + 1);
-  const mockWeek14 = 1;
+  const mockWeek14 = 0;
   let events: DeployedEvent[] = [];
   if (weekNumber === 14 && mockWeek14) {
     events = JSON.parse(

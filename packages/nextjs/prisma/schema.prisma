@@ -45,4 +45,7 @@ model DeployedEvent {
   startdate   DateTime  // event scheduled time
   address     String    @unique // contract
   salt        String    @unique
+  venue       Json
+  homeTeam    Json
+  awayTeam    Json
 }

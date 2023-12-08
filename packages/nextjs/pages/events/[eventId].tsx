@@ -29,6 +29,18 @@ interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "sta
   startdate: Date | string;
 }
 
+interface Venue {
+  name: string;
+  city: string;
+}
+interface Team {
+  name: string;
+  id: string;
+  homeAway: string;
+  logo: string;
+  moneylines: number[];
+}
+
 // o/r eventDate, deadline
 interface EventPageProps {
   event: DeployedEventNormalized | null;
@@ -73,8 +85,12 @@ enum EventWinner {
 
 const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
   const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
-
-  const { write: approveWrite } = useContractWrite({
+  const {
+    data,
+    isLoading,
+    isSuccess,
+    write: approveWrite,
+  } = useContractWrite({
     address: tokenAddress,
     abi: erc20ABI,
     functionName: "approve",
@@ -109,6 +125,9 @@ const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
     >
       <ModalHeader>Bet 100 on Home</ModalHeader>
       <ModalBody>
+        {isLoading && <div>Loading...</div>}
+        {isSuccess && <div>Success!</div>}
+        {data && <div>Data: {JSON.stringify(data)}</div>}
         Proin ut dui sed metus pharetra hend rerit vel non mi. Nulla ornare faucibus ex, non facilisis nisl. Maecenas
         aliquet mauris ut tempus.
         <Button onClick={() => approveWrite()}>Approve</Button>
@@ -210,9 +229,14 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
 
   const DATA = [
     ["Name", eventDisplayDetails.name],
+    ["Token", tokenAddress],
+    ["Name", event.displayName],
     ["Short Name", eventDisplayDetails.shortName],
     ["Full Name", eventDisplayDetails.fullName],
-    ["Venue", `${eventDisplayDetails.venue.fullName}, ${eventDisplayDetails.venue.city}`],
+    // ["Venue", `${eventDisplayDetails.venue.fullName}, ${eventDisplayDetails.venue.city}`],
+    ["Venue", (event.venue as unknown as Venue).name],
+    ["Home Team", (event.homeTeam as unknown as Team).name],
+    ["Away Team", (event.awayTeam as unknown as Team).name],
     ["Home Team", eventDisplayDetails.homeTeamName],
     ["Away Team", eventDisplayDetails.awayTeamName],
     ["Status Name", eventDisplayDetails.status.name],
@@ -339,15 +363,15 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
         where: { eventId },
       });
     } else {
-      event = {
-        id: 5,
-        eventId: "401548411",
-        displayName: "Tennessee Titans at Chicago Bears",
-        eventDate: new Date("2023-08-12T00:00:00.000Z"),
-        startdate: new Date("2023-08-12T00:00:00.000Z"),
-        address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
-        salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
-      };
+      // event = {
+      //   id: 5,
+      //   eventId: "401548411",
+      //   displayName: "Tennessee Titans at Chicago Bears",
+      //   eventDate: new Date("2023-08-12T00:00:00.000Z"),
+      //   startdate: new Date("2023-08-12T00:00:00.000Z"),
+      //   address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
+      //   salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
+      // };
     }
     // console.log("event:", event);
 
@@ -390,6 +414,9 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
           startdate: event?.startdate.toJSON() || "0",
           address: event?.address || "0x",
           salt: event?.salt || "",
+          venue: event?.venue || "",
+          homeTeam: event?.homeTeam || "",
+          awayTeam: event?.awayTeam || "",
         },
         makerSignatures: makerSignatures.map(makerSignature => ({
           ...makerSignature,
