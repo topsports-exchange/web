@@ -74,25 +74,77 @@ const toBetInfo = ([eventId, eventContract, startdate, marketId, betId]: BetInfo
   betId,
 });
 
-// TODO bet both?
-const claimable = ({ totalHomePayout, totalAwayPayout }: Wager) => {
-  if (totalHomePayout > 0) {
-    return totalHomePayout;
-  } else if (totalAwayPayout > 0) {
-    return totalAwayPayout;
-  } else {
-    return 0n;
+// function collect(address _to) external returns (uint256 amount) {
+//   // solhint-disable-next-line not-rely-on-time
+//   if ((startdate + 24 hours > block.timestamp) && (winner == EventWinner.UNDEFINED)) {
+//       // Event completed without resolution of the event, release stake and
+//       // profit to their respective owners
+//       amount = wagerByAddress[_msgSender()].totalWagered;
+//   } else {
+//       // collect fees
+//       if (EventWinner.HOME_TEAM == winner) {
+//           amount = wagerByAddress[_msgSender()].totalHomePayout;
+//       } else if (EventWinner.AWAY_TEAM == winner) {
+//           amount = wagerByAddress[_msgSender()].totalAwayPayout;
+//       } else {
+//           revert EventNotResolved(uint256(winner));
+//       }
+//   }
+//   token.safeTransfer(_to, amount);
+//   delete (wagerByAddress[_msgSender()]);
+
+//   // Uncomment the following line if you want to emit a Claimed event
+//   // emit Claimed(payout);
+// }
+interface BetStatusProps {
+  choice: EventWinner;
+  eventDate: Date;
+  winner: EventWinner;
+  wager: Wager;
+}
+// const t24hours = 3600 * 24 * 1000;
+const t24hours = 3600 * 1 * 1000;
+const wontResolve = (p: BetStatusProps) => {
+  return new Date().valueOf() >= p.eventDate.valueOf() + t24hours && p.winner === EventWinner.UNDEFINED;
+};
+const isPending = (p: BetStatusProps) => {
+  return new Date().valueOf() < p.eventDate.valueOf() + t24hours && p.winner === EventWinner.UNDEFINED;
+};
+const didResolve = (p: BetStatusProps) => {
+  return p.winner !== EventWinner.UNDEFINED;
+};
+const youWon = (p: BetStatusProps) => {
+  return p.winner === p.choice;
+};
+const canClaimAmount = (p: BetStatusProps) => {
+  if (wontResolve(p) && p.wager.totalWagered > 0n) {
+    return p.wager.totalWagered;
   }
+  if (didResolve(p) && youWon(p)) {
+    if (p.choice === EventWinner.HOME_TEAM) {
+      // or 0n, already claimed
+      return p.choice === EventWinner.HOME_TEAM ? p.wager.totalHomePayout : p.wager.totalAwayPayout;
+    }
+  }
+  return 0n;
 };
 
-const Claim = ({ eventAddress, accountAddress }: { eventAddress: string; accountAddress: string }) => {
+const Claim = ({
+  eventAddress,
+  accountAddress,
+  claimAmount,
+}: {
+  eventAddress: string;
+  accountAddress: string;
+  claimAmount: bigint;
+}) => {
   const { write: claimWrite } = useContractWrite({
     address: eventAddress,
     abi: deployedContractsData[31337].TopsportsEventCore.abi,
     functionName: "collect",
     args: [accountAddress],
   });
-  return <Button onClick={() => claimWrite}>Claim</Button>;
+  return <Button onClick={() => claimWrite}>Claim {claimAmount.toString()}</Button>;
 };
 
 const MyBets = () => {
@@ -169,8 +221,29 @@ const MyBets = () => {
     fetchContractEvent();
   }, [account, allMarkets, publicClient, eventsDetails]);
 
+  const retp = (bet: BetInfo) => {
+    const p: BetStatusProps = {
+      choice: allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].winner,
+      eventDate: new Date(eventsDetails[bet.eventContract].eventDate),
+      winner: eventWinner[bet.eventContract],
+      wager: eventWager[bet.eventContract],
+    };
+    return p;
+  };
+  const betIsPending = (bet: BetInfo) => {
+    return isPending(retp(bet));
+  };
+  const betIsWon = (bet: BetInfo) => {
+    return didResolve(retp(bet)) && youWon(retp(bet));
+  };
+  const betIsHistory = (bet: BetInfo) => {
+    return !betIsPending(bet) && !betIsWon(bet);
+  };
+
   // TODO filter pending vs wins vs history
   const Bet = ({ bet }: { bet: BetInfo }) => {
+    const p = retp(bet);
+    // debugger;
     return (
       <div>
         <p>
@@ -181,6 +254,10 @@ const MyBets = () => {
           Chose: {eventWinnerString(allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].winner)}
         </p>
         <p>eventWinner {eventWinnerString(eventWinner[bet.eventContract])}</p>
+        <p>
+          Days til event:{" "}
+          {(new Date(eventsDetails[bet.eventContract].eventDate).valueOf() - new Date().valueOf()) / (3600 * 24 * 1000)}
+        </p>
         <p>Home Odds {allMarkets[bet.eventContract][Number(bet.marketId)].homeTeamOdds.toString()}</p>
         <p>Away Odds {allMarkets[bet.eventContract][Number(bet.marketId)].awayTeamOdds.toString()}</p>
         <p>Staked {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].stake.toString()}</p>
@@ -191,8 +268,14 @@ const MyBets = () => {
             typeof value === "bigint" ? value.toString() : value,
           )}
         </p>
-        <p>claimable {claimable({ ...eventWager[bet.eventContract] }).toString()}</p>
-        <Claim eventAddress={bet.eventContract} accountAddress={account.address as string} />
+        <p>canClaimAmount {canClaimAmount(p).toString()}</p>
+        {canClaimAmount(p) > 0n && (
+          <Claim
+            eventAddress={bet.eventContract}
+            accountAddress={account.address as string}
+            claimAmount={canClaimAmount(p)}
+          />
+        )}
         DEBUG
         {JSON.stringify(bet, (key, value) => (typeof value === "bigint" ? value.toString() : value))}
         {/* {eventcache[bet.eventId.toString()] && JSON.stringify(eventcache[bet.eventId.toString()])} */}
@@ -214,7 +297,7 @@ const MyBets = () => {
       <Card title="My Bets">
         <Card title="Pending">
           <StyledTable role="grid" $gridTemplateColumns="repeat(1,1fr)">
-            {bets.map((bet, index) => (
+            {bets.filter(betIsPending).map((bet, index) => (
               <StyledBetBodyCell key={index}>
                 <StyledBody>
                   <Bet bet={bet} />
@@ -223,9 +306,22 @@ const MyBets = () => {
             ))}
           </StyledTable>
         </Card>
+
+        <Card title="Wins">
+          <StyledTable role="grid" $gridTemplateColumns="repeat(1,1fr)">
+            {bets.filter(betIsWon).map((bet, index) => (
+              <StyledBetBodyCell key={index}>
+                <StyledBody>
+                  <Bet bet={bet} />
+                </StyledBody>
+              </StyledBetBodyCell>
+            ))}
+          </StyledTable>
+        </Card>
+
         <Card title="History">
           <StyledTable role="grid" $gridTemplateColumns="repeat(1,1fr)">
-            {bets.map((bet, index) => (
+            {bets.filter(betIsHistory).map((bet, index) => (
               <StyledBetBodyCell key={index}>
                 <StyledBody>
                   <Bet bet={bet} />
