@@ -378,22 +378,22 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
   }
   try {
     let event;
-    const mockEvent = 0;
+    const mockEvent = 1;
     const mockSigs = 0;
     if (!mockEvent) {
       event = await prisma.deployedEvent.findUnique({
         where: { eventId },
       });
     } else {
-      // event = {
-      //   id: 5,
-      //   eventId: "401548411",
-      //   displayName: "Tennessee Titans at Chicago Bears",
-      //   eventDate: new Date("2023-08-12T00:00:00.000Z"),
-      //   startdate: new Date("2023-08-12T00:00:00.000Z"),
-      //   address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
-      //   salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
-      // };
+      event = {
+        id: 5,
+        eventId: "401547578",
+        displayName: "Tennessee Titans at Chicago Bears",
+        eventDate: new Date(1701998100),
+        startdate: new Date(1701998100),
+        address: "0x55406DBa126cc1520b4C90b0B060EBE776d504A7",
+        salt: "0x73e416ffdd363cd831fe2466b39d14c9ef9aa131f773290b879da674895cee0c",
+      };
     }
     // console.log("event:", event);
 
