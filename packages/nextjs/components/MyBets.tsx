@@ -144,7 +144,7 @@ const Claim = ({
     functionName: "collect",
     args: [accountAddress],
   });
-  return <Button onClick={() => claimWrite}>Claim {claimAmount.toString()}</Button>;
+  return <Button onClick={() => claimWrite()}>Claim {claimAmount.toString()}</Button>;
 };
 
 const MyBets = () => {
