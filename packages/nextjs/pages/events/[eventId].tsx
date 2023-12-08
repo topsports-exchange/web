@@ -10,6 +10,7 @@ import {
   StyledBodyCell,
   StyledTable,
 } from "baseui/table-grid";
+import { ethers } from "ethers";
 import { GetServerSideProps } from "next";
 import { usePublicClient } from "wagmi";
 import { erc20ABI } from "wagmi";
@@ -82,6 +83,26 @@ enum EventWinner {
   HOME_TEAM,
   AWAY_TEAM,
 }
+
+const HackWin = (props: any) => {
+  const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
+  // await TopsportsEventCore.resolutionCallback(
+  //   "0x0000000000000000000000000000000000000000000000000000000000000000",
+  //   hre.ethers.utils.solidityPack(["int256"], [AWAY_TEAM]),
+  //   "0x",
+  // );
+  const { write } = useContractWrite({
+    address: props.event.address,
+    abi: TopsportsEventCore.abi,
+    functionName: "resolutionCallback",
+    args: [
+      "0x0000000000000000000000000000000000000000000000000000000000000000",
+      ethers.solidityPacked(["int256"], [EventWinner.HOME_TEAM]) as `0x${string}`,
+      "0x",
+    ],
+  });
+  return <Button onClick={() => write()}>Hack Winner</Button>;
+};
 
 const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
   const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
@@ -267,6 +288,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
               </div>
             ))}
           </StyledTable>
+          <HackWin event={event} />
         </StyledBody>
       </Card>
 
