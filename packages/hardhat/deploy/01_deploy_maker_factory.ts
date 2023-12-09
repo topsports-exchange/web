@@ -27,7 +27,7 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     You can run the `yarn account` command to check your balance in every network.
   */
   const { deployer } = await hre.getNamedAccounts();
-  const [account1, account2]: SignerWithAddress[] = await hre.ethers.getSigners();
+  const [account1]: SignerWithAddress[] = await hre.ethers.getSigners();
   const { deploy, get } = hre.deployments;
 
   try {
@@ -73,8 +73,6 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     console.log(`Balance after minting: ${hre.ethers.utils.formatUnits(await MockEuroe.balanceOf(contractAddr), 6)}`);
   }
 
-  await MockEuroe.mint(account2.address, parseUnits("10000.0", 6));
-
   if (true) {
     function saltEvent(eventId: number, displayName: string): string {
       const hash = hre.ethers.utils.solidityKeccak256(["uint256", "string"], [eventId, displayName]);
@@ -90,7 +88,7 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     console.log(`Event address:\t${evContractAddr}`);
     //  await wallet._signTypedData(structuredData.domain, structuredData.types, data);
 
-    const TopsportsMakerCore = await hre.ethers.getContractAt("TopsportsMakerCore", contractAddr, account2);
+    const TopsportsMakerCore = await hre.ethers.getContractAt("TopsportsMakerCore", contractAddr, account1);
     // makerContract.nonces(spender))
     const nonce = await TopsportsMakerCore.nonces(evContractAddr);
 
