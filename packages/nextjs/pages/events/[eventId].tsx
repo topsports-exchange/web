@@ -344,7 +344,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
               "Limit",
               "Deadline",
               <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
-                Use this makerSignature
+                Get in &gt;&gt;
               </Button>,
               m.homeTeamOdds,
               m.awayTeamOdds,
