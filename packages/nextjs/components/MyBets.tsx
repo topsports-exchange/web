@@ -222,13 +222,31 @@ const MyBets = () => {
 
   const retp = (betInfo: BetInfo) => {
     console.log("retp", betInfo);
-    const p: BetStatusProps = {
+    try {
+      const p: BetStatusProps = {
+        choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
+        eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
+        winner: eventWinner[betInfo.eventContract],
+        wager: eventWager[betInfo.eventContract],
+      };
+      return p;
+    } catch (error) {
+      console.error("retp", error);
+      debugger;
+    }
+    // const p: BetStatusProps = {
+    //   choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
+    //   eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
+    //   winner: eventWinner[betInfo.eventContract],
+    //   wager: eventWager[betInfo.eventContract],
+    // };
+    // return p;
+    return {
       choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
       eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
       winner: eventWinner[betInfo.eventContract],
       wager: eventWager[betInfo.eventContract],
     };
-    return p;
   };
   const betInfoIsPending = (betInfo: BetInfo) => {
     return isPending(retp(betInfo));
@@ -305,7 +323,7 @@ const MyBets = () => {
     margin: "10px",
   });
 
-  if (!allMarkets || !eventsDetails) {
+  if (Object.keys(allMarkets).length === 0 || Object.keys(eventsDetails).length === 0) {
     return <p>Loading...</p>;
   }
   return (
