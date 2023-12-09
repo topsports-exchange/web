@@ -16,6 +16,7 @@ import { usePublicClient } from "wagmi";
 import { erc20ABI } from "wagmi";
 import { useContractWrite } from "wagmi";
 import MyBets from "~~/components/MyBets";
+import { Address } from "~~/components/scaffold-eth/Address";
 import deployedContractsData from "~~/contracts/deployedContracts";
 
 // import { useStyletron } from 'baseui';
@@ -270,6 +271,41 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   return (
     <div className="grid grid-cols-3 gap-4">
       <div className="col-span-2">
+        <Card>
+          <div className="join">
+            <Card>
+              <div className="join">
+                <div>
+                  <img src={(event.homeTeam as unknown as Team).logo} alt="" style={{ width: "150px" }} />
+                  {(event.homeTeam as unknown as Team).name}
+                </div>
+                <div className="pt-16 text-6xl font-bold">X</div>
+                <div>
+                  <img src={(event.awayTeam as unknown as Team).logo} alt="" style={{ width: "150px" }} />
+                  {(event.awayTeam as unknown as Team).name}
+                </div>
+              </div>
+            </Card>
+
+            <Card>
+              <div className="join">
+                <div className="text-lg">
+                  <p>Kick off</p>
+                  <p>Venue</p>
+                  <p>Competition</p>
+                  <p>Smart Contract</p>
+                </div>
+                <div className="text-lg font-bold">
+                  <p>{event.eventDate.toString()}</p>
+                  <p>{(event.venue as unknown as Venue).name}</p>
+                  <p>NFL, Week X</p>
+                  <p>{<Address address={event.address} />}</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </Card>
+
         <Card
           title="Event Details"
           overrides={{ Root: { style: { width: "328px", float: "left", margin: "20px" } } }}
