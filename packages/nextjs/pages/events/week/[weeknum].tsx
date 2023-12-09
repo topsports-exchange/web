@@ -76,27 +76,30 @@ const WeekPage = ({ weekNumber, events }: WeekProps) => {
           ))}
       </div>
 
-      <MyBets />
-
-      <div>
-        <Card title="This Week">
-          <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
-            {events?.map((event, idx) => (
-              <StyledEventBodyCell key={idx}>
-                <StyledBody>
-                  <Link
-                    className="underline text-blue-600 hover:text-blue-800 visited:text-purple-600"
-                    href={`/events/${event.eventId}`}
-                  >
-                    {event.displayName}
-                  </Link>
-                  <p>{event.eventDate}</p>
-                  <p>Markets: {event.count}</p>
-                </StyledBody>
-              </StyledEventBodyCell>
-            ))}
-          </StyledTable>
-        </Card>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-2">
+          <Card title="This Week">
+            <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
+              {events?.map((event, idx) => (
+                <StyledEventBodyCell key={idx}>
+                  <StyledBody>
+                    <Link
+                      className="underline text-blue-600 hover:text-blue-800 visited:text-purple-600"
+                      href={`/events/${event.eventId}`}
+                    >
+                      {event.displayName}
+                    </Link>
+                    <p>{event.eventDate}</p>
+                    <p>Markets: {event.count}</p>
+                  </StyledBody>
+                </StyledEventBodyCell>
+              ))}
+            </StyledTable>
+          </Card>
+        </div>
+        <div className="col-span-1">
+          <MyBets />
+        </div>
       </div>
     </div>
   );
