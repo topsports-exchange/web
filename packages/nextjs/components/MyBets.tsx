@@ -4,14 +4,13 @@ import { DeployedEvent } from "@prisma/client";
 import { withStyle } from "baseui";
 import { Button } from "baseui/button";
 import { Card, StyledBody } from "baseui/card";
-import {
-  // StyledHeadCell,
-  StyledBodyCell,
-  StyledTable,
-} from "baseui/table-grid";
+import { StyledBodyCell, StyledTable } from "baseui/table-grid";
+import { getContract } from "viem";
 import { useContractWrite, usePublicClient } from "wagmi";
 import { useAccount } from "wagmi";
-import deployedContractsData from "~~/contracts/deployedContracts";
+import { useDeployedContractInfo, useScaffoldContract } from "~~/hooks/scaffold-eth/";
+// import deployedContractsData from "~~/contracts/deployedContracts";
+import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
 
 enum EventWinner {
   UNDEFINED,
@@ -102,8 +101,8 @@ interface BetStatusProps {
   winner: EventWinner;
   wager: Wager;
 }
-// const t24hours = 3600 * 24 * 1000;
-const t24hours = 3600 * 1 * 1000;
+const t24hours = 3600 * 24 * 1000;
+// const t24hours = 3600 * 1 * 1000;
 const wontResolve = (p: BetStatusProps) => {
   return new Date().valueOf() >= p.eventDate.valueOf() + t24hours && p.winner === EventWinner.UNDEFINED;
 };
@@ -138,9 +137,10 @@ const Claim = ({
   accountAddress: string;
   claimAmount: bigint;
 }) => {
+  const { data: TopsportsEventCore } = useScaffoldContract({ contractName: "TopsportsEventCore" });
   const { write: claimWrite } = useContractWrite({
     address: eventAddress,
-    abi: deployedContractsData[31337].TopsportsEventCore.abi,
+    abi: TopsportsEventCore?.abi as Contract<"TopsportsEventCore">["abi"],
     functionName: "collect",
     args: [accountAddress],
   });
@@ -150,6 +150,8 @@ const Claim = ({
 const MyBets = () => {
   const publicClient = usePublicClient();
   const account = useAccount();
+  const { data: TopsportsEventFactory } = useScaffoldContract({ contractName: "TopsportsEventFactory" });
+  const { data: deployedContractData } = useDeployedContractInfo("TopsportsEventCore");
   const [bets, setBets] = useState<BetInfo[]>([]);
   const [eventWinner, setEventWinner] = useState<{ [key: string]: number }>({});
   const [eventWager, setEventWager] = useState<{ [address: string]: Wager }>({});
@@ -169,44 +171,30 @@ const MyBets = () => {
         // while (true) {
         try {
           const result = toBetInfo(
-            await publicClient.readContract({
-              address: deployedContractsData[31337].TopsportsEventFactory.address,
-              abi: deployedContractsData[31337].TopsportsEventFactory.abi,
-              functionName: "betsByAddress",
-              args: [account.address as string, i],
-            }),
+            (await TopsportsEventFactory?.read.betsByAddress([account.address as string, i])) as BetInfoArray,
           );
           newBets.push(result);
+
+          const TopsportsEventCore = getContract({
+            address: result.eventContract,
+            abi: deployedContractData?.abi as Contract<ContractName>["abi"],
+            publicClient,
+          });
 
           if (!eventsDetails[result.eventContract]) {
             const response = await fetch("/api/deployedEvent?address=" + result.eventContract);
             const event = await response.json();
             setEventsDetails(prev => ({ ...prev, [result.eventContract]: event }));
           }
-
+          // If the event contract is not in allMarkets, fetch all markets for that contract
           if (!allMarkets[result.eventContract]) {
-            const markets = (await publicClient.readContract({
-              // If the event contract is not in allMarkets, fetch all markets for that contract
-              // const markets = await publicClient.readContract({
-              address: result.eventContract,
-              abi: deployedContractsData[31337].TopsportsEventCore.abi,
-              functionName: "getAllMarkets",
-            })) as Market[];
+            const markets = (await TopsportsEventCore.read.getAllMarkets()) as Market[];
             setAllMarkets(prev => ({ ...prev, [result.eventContract]: markets }));
 
-            const winner = await publicClient.readContract({
-              address: result.eventContract,
-              abi: deployedContractsData[31337].TopsportsEventCore.abi,
-              functionName: "winner",
-            });
+            const winner = (await TopsportsEventCore.read.winner()) as number;
             setEventWinner(prev => ({ ...prev, [result.eventContract]: winner }));
 
-            const wager: WagerArray = await publicClient.readContract({
-              address: result.eventContract,
-              abi: deployedContractsData[31337].TopsportsEventCore.abi,
-              functionName: "wagerByAddress",
-              args: [account.address as string],
-            });
+            const wager = (await TopsportsEventCore.read.wagerByAddress([account.address as string])) as WagerArray;
             setEventWager(prev => ({ ...prev, [result.eventContract]: toWager(wager) }));
           }
         } catch (error) {
@@ -219,7 +207,7 @@ const MyBets = () => {
       setBets(newBets);
     };
     fetchContractEvent();
-  }, [account, allMarkets, publicClient, eventsDetails]);
+  }, [account, allMarkets, publicClient, eventsDetails, TopsportsEventFactory, deployedContractData]);
 
   const retp = (bet: BetInfo) => {
     const p: BetStatusProps = {
@@ -240,10 +228,8 @@ const MyBets = () => {
     return !betIsPending(bet) && !betIsWon(bet);
   };
 
-  // TODO filter pending vs wins vs history
   const Bet = ({ bet }: { bet: BetInfo }) => {
     const p = retp(bet);
-    // debugger;
     return (
       <div>
         <p>
