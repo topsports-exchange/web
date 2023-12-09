@@ -15,6 +15,7 @@ import { GetServerSideProps } from "next";
 import { usePublicClient } from "wagmi";
 import { erc20ABI } from "wagmi";
 import { useContractWrite } from "wagmi";
+import MyBets from "~~/components/MyBets";
 import deployedContractsData from "~~/contracts/deployedContracts";
 
 // import { useStyletron } from 'baseui';
@@ -245,7 +246,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   }, [eventId, event, publicClient]);
 
   if (!event || !eventDisplayDetails || !contractEventId) {
-    return <div>Event not found</div>;
+    return <div>Event loading...</div>;
   }
 
   const DATA = [
@@ -267,104 +268,109 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   ];
 
   return (
-    <div>
-      <Card
-        title="Event Details"
-        overrides={{ Root: { style: { width: "328px", float: "left", margin: "20px" } } }}
-        // headerImage={
-        //   'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/chi.png'
-        // }
-      >
-        <StyledBody>
-          <p>
-            Event ID from URL / Contract: {eventId} / {contractEventId}
-          </p>
-          <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
-            {DATA.map((row, rowIndex) => (
-              <div key={rowIndex} role="row" style={{ display: "contents" }}>
-                {row.map((cell, cellIndex) => (
-                  <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                ))}
-              </div>
-            ))}
-          </StyledTable>
-          <HackWin event={event} />
-        </StyledBody>
-      </Card>
+    <div className="grid grid-cols-3 gap-4">
+      <div className="col-span-2">
+        <Card
+          title="Event Details"
+          overrides={{ Root: { style: { width: "328px", float: "left", margin: "20px" } } }}
+          // headerImage={
+          //   'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/chi.png'
+          // }
+        >
+          <StyledBody>
+            <p>
+              Event ID from URL / Contract: {eventId} / {contractEventId}
+            </p>
+            <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
+              {DATA.map((row, rowIndex) => (
+                <div key={rowIndex} role="row" style={{ display: "contents" }}>
+                  {row.map((cell, cellIndex) => (
+                    <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                  ))}
+                </div>
+              ))}
+            </StyledTable>
+            <HackWin event={event} />
+          </StyledBody>
+        </Card>
 
-      {makerSignatures
-        ?.map(m => {
-          // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
-          return [
-            "Use",
-            "Home odds",
-            "Away odds",
-            "Limit",
-            "Deadline",
-            <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
-              Use this makerSignature
-            </Button>,
-            m.homeTeamOdds,
-            m.awayTeamOdds,
-            m.limit,
-            new Date(1000 * parseInt(m.deadline)).toLocaleString(),
-          ];
-        })
-        .map((row, rowIndex) => (
-          <Card
-            key={rowIndex}
-            title={"Market #" + makerSignatures[rowIndex].id}
-            overrides={{ Root: { style: { display: "contents" } } }}
-          >
-            <StyledBody>
-              <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
-                {row.map((cell, cellIndex) => (
-                  <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                ))}
-              </StyledTable>
-            </StyledBody>
-          </Card>
-        ))}
+        {makerSignatures
+          ?.map(m => {
+            // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
+            return [
+              "Use",
+              "Home odds",
+              "Away odds",
+              "Limit",
+              "Deadline",
+              <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
+                Use this makerSignature
+              </Button>,
+              m.homeTeamOdds,
+              m.awayTeamOdds,
+              m.limit,
+              new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+            ];
+          })
+          .map((row, rowIndex) => (
+            <Card
+              key={rowIndex}
+              title={"Market #" + makerSignatures[rowIndex].id}
+              overrides={{ Root: { style: { display: "contents" } } }}
+            >
+              <StyledBody>
+                <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
+                  {row.map((cell, cellIndex) => (
+                    <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                  ))}
+                </StyledTable>
+              </StyledBody>
+            </Card>
+          ))}
 
-      {makerSignatureId && tokenAddress && (
-        <TakeSig
-          event={event}
-          tokenAddress={tokenAddress}
-          makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
-        />
-      )}
+        {makerSignatureId && tokenAddress && (
+          <TakeSig
+            event={event}
+            tokenAddress={tokenAddress}
+            makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
+          />
+        )}
 
-      {markets
-        ?.map(m => {
-          // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
-          return [
-            "Maker",
-            "Home odds",
-            "Away odds",
-            "Limit",
-            "Deadline",
-            "Bets",
-            m.maker,
-            m.homeTeamOdds.toString(),
-            m.awayTeamOdds.toString(),
-            m.limit.toString(),
-            new Date(1000 * parseInt(m.deadline)).toLocaleString(),
-            <Button key={m.id} onClick={() => console.log("this bets:", m.bets)}>
-              Log {m.bets.length}
-            </Button>,
-          ];
-        })
-        .map((row, rowIndex) => (
-          <Card key={rowIndex} title={"Open Market"} overrides={{ Root: { style: { display: "contents" } } }}>
-            <StyledBody>
-              <StyledTable role="grid" $gridTemplateColumns="repeat(6,1fr)">
-                {row.map((cell, cellIndex) => (
-                  <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                ))}
-              </StyledTable>
-            </StyledBody>
-          </Card>
-        ))}
+        {markets
+          ?.map(m => {
+            // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
+            return [
+              "Maker",
+              "Home odds",
+              "Away odds",
+              "Limit",
+              "Deadline",
+              "Bets",
+              m.maker,
+              m.homeTeamOdds.toString(),
+              m.awayTeamOdds.toString(),
+              m.limit.toString(),
+              new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+              <Button key={m.id} onClick={() => console.log("this bets:", m.bets)}>
+                Log {m.bets.length}
+              </Button>,
+            ];
+          })
+          .map((row, rowIndex) => (
+            <Card key={rowIndex} title={"Open Market"} overrides={{ Root: { style: { display: "contents" } } }}>
+              <StyledBody>
+                <StyledTable role="grid" $gridTemplateColumns="repeat(6,1fr)">
+                  {row.map((cell, cellIndex) => (
+                    <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                  ))}
+                </StyledTable>
+              </StyledBody>
+            </Card>
+          ))}
+      </div>
+      <div className="col-span-1">
+        <MyBets />
+      </div>
     </div>
   );
 };
