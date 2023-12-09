@@ -127,6 +127,9 @@ const youWon = (p: BetStatusProps) => {
   return p.winner === p.choice;
 };
 const canClaimAmount = (p: BetStatusProps) => {
+  if (!p.wager) {
+    debugger;
+  }
   if (wontResolve(p) && p.wager.totalWagered > 0n) {
     return p.wager.totalWagered;
   }
@@ -203,7 +206,7 @@ const MyBets = () => {
             setAllMarkets(prev => ({ ...prev, [result.eventContract]: markets }));
 
             const winner = (await TopsportsEventCore.read.winner()) as number;
-            setEventWinner(prev => ({ ...prev, [result.eventContract]: winner }));
+            setEventWinner(prev => ({ ...prev, [result.eventContract]: winner })); // XXX race?
 
             const wager = (await TopsportsEventCore.read.wagerByAddress([account.address as string])) as WagerArray;
             setEventWager(prev => ({ ...prev, [result.eventContract]: toWager(wager) }));
@@ -215,10 +218,12 @@ const MyBets = () => {
           break;
         }
       }
+      console.log("set newBets", newBets);
       setBets(newBets);
     };
     fetchContractEvent();
-  }, [account, allMarkets, publicClient, eventsDetails, TopsportsEventFactory, deployedContractData]);
+    // }, [account, allMarkets, publicClient, eventsDetails, TopsportsEventFactory, deployedContractData]);
+  });
 
   const retp = (betInfo: BetInfo) => {
     console.log("retp", betInfo);
@@ -323,7 +328,13 @@ const MyBets = () => {
     margin: "10px",
   });
 
-  if (Object.keys(allMarkets).length === 0 || Object.keys(eventsDetails).length === 0) {
+  if (
+    bets.length === 0 ||
+    Object.keys(allMarkets).length === 0 ||
+    Object.keys(eventsDetails).length === 0 ||
+    Object.keys(eventWinner).length === 0 ||
+    Object.keys(eventWager).length === 0
+  ) {
     return <p>Loading...</p>;
   }
   return (
