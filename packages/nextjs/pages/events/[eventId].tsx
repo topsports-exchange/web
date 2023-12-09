@@ -175,6 +175,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   const [makerSignatureId, setMakerSignatureId] = useState<number | null>(null);
   const [winner, setWinner] = useState(EventWinner.UNDEFINED);
   const [eventDisplayDetails, setEventDisplayDetails] = useState<EventDisplayDetails | null>(null);
+  const useMarkets = false;
 
   useEffect(() => {
     if (!event) {
@@ -234,7 +235,10 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
           return result;
         };
 
-        setMarkets((await readEventContract("getAllMarkets")) as any[]);
+        if (useMarkets) {
+          setMarkets((await readEventContract("getAllMarkets")) as any[]); // TODO match sigs
+        }
+
         setTokenAddress((await readEventContract("token")) as `0x${string}`);
         setWinner((await readEventContract("winner")) as EventWinner);
         setContractEventId((await readEventContract("eventId")).toString());
@@ -331,6 +335,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
             <HackWin event={event} />
           </StyledBody>
         </Card> */}
+
         {winner === EventWinner.UNDEFINED ? <HackWin event={event} /> : "Winner already set"}
 
         {makerSignatures
@@ -339,8 +344,8 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
             // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
             return [
               "Use",
-              "Home odds",
-              "Away odds",
+              eventDisplayDetails.homeTeamName,
+              eventDisplayDetails.awayTeamName,
               "Limit",
               "Deadline",
               <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
@@ -376,38 +381,39 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
           />
         )}
 
-        {markets
-          ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
-          ?.map(m => {
-            // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
-            return [
-              "Maker",
-              "Home odds",
-              "Away odds",
-              "Limit",
-              "Deadline",
-              "Bets",
-              m.maker,
-              m.homeTeamOdds.toString(),
-              m.awayTeamOdds.toString(),
-              m.limit.toString(),
-              new Date(1000 * parseInt(m.deadline)).toLocaleString(),
-              <Button key={m.id} onClick={() => console.log("this bets:", m.bets)}>
-                Log {m.bets.length}
-              </Button>,
-            ];
-          })
-          .map((row, rowIndex) => (
-            <Card key={rowIndex} title={"Open Market"} overrides={{ Root: { style: { display: "contents" } } }}>
-              <StyledBody>
-                <StyledTable role="grid" $gridTemplateColumns="repeat(6,1fr)">
-                  {row.map((cell, cellIndex) => (
-                    <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                  ))}
-                </StyledTable>
-              </StyledBody>
-            </Card>
-          ))}
+        {useMarkets &&
+          markets
+            ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
+            ?.map(m => {
+              // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
+              return [
+                "Maker",
+                eventDisplayDetails.homeTeamName,
+                eventDisplayDetails.awayTeamName,
+                "Limit",
+                "Deadline",
+                "Bets",
+                m.maker,
+                m.homeTeamOdds.toString(),
+                m.awayTeamOdds.toString(),
+                m.limit.toString(),
+                new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+                <Button key={m.id} onClick={() => console.log("this bets:", m.bets)}>
+                  Log {m.bets.length}
+                </Button>,
+              ];
+            })
+            .map((row, rowIndex) => (
+              <Card key={rowIndex} title={"Open Market"} overrides={{ Root: { style: { display: "contents" } } }}>
+                <StyledBody>
+                  <StyledTable role="grid" $gridTemplateColumns="repeat(6,1fr)">
+                    {row.map((cell, cellIndex) => (
+                      <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                    ))}
+                  </StyledTable>
+                </StyledBody>
+              </Card>
+            ))}
       </div>
       <div className="col-span-1">
         <MyBets />
