@@ -250,23 +250,23 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
     return <div>Event loading...</div>;
   }
 
-  const DATA = [
-    ["Name", eventDisplayDetails.name],
-    ["Token", tokenAddress],
-    ["Name", event.displayName],
-    ["Short Name", eventDisplayDetails.shortName],
-    ["Full Name", eventDisplayDetails.fullName],
-    // ["Venue", `${eventDisplayDetails.venue.fullName}, ${eventDisplayDetails.venue.city}`],
-    ["Venue", (event.venue as unknown as Venue).name],
-    ["Home Team", (event.homeTeam as unknown as Team).name],
-    ["Away Team", (event.awayTeam as unknown as Team).name],
-    ["Home Team", eventDisplayDetails.homeTeamName],
-    ["Away Team", eventDisplayDetails.awayTeamName],
-    ["Status Name", eventDisplayDetails.status.name],
-    ["Status Completed", eventDisplayDetails.status.completed ? "Yes" : "No"],
-    ["Status Period", eventDisplayDetails.status?.period?.toString()],
-    ["Winner", winner === EventWinner.HOME_TEAM ? eventDisplayDetails.homeTeamName : eventDisplayDetails.awayTeamName],
-  ];
+  // const DATA = [
+  //   ["Name", eventDisplayDetails.name],
+  //   ["Token", tokenAddress],
+  //   ["Name", event.displayName],
+  //   ["Short Name", eventDisplayDetails.shortName],
+  //   ["Full Name", eventDisplayDetails.fullName],
+  //   // ["Venue", `${eventDisplayDetails.venue.fullName}, ${eventDisplayDetails.venue.city}`],
+  //   ["Venue", (event.venue as unknown as Venue).name],
+  //   ["Home Team", (event.homeTeam as unknown as Team).name],
+  //   ["Away Team", (event.awayTeam as unknown as Team).name],
+  //   ["Home Team", eventDisplayDetails.homeTeamName],
+  //   ["Away Team", eventDisplayDetails.awayTeamName],
+  //   ["Status Name", eventDisplayDetails.status.name],
+  //   ["Status Completed", eventDisplayDetails.status.completed ? "Yes" : "No"],
+  //   ["Status Period", eventDisplayDetails.status?.period?.toString()],
+  //   ["Winner", winner === EventWinner.HOME_TEAM ? eventDisplayDetails.homeTeamName : eventDisplayDetails.awayTeamName],
+  // ];
 
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -306,7 +306,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
           </div>
         </Card>
 
-        <Card
+        {/* <Card
           title="Event Details"
           overrides={{ Root: { style: { width: "328px", float: "left", margin: "20px" } } }}
           // headerImage={
@@ -328,9 +328,11 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
             </StyledTable>
             <HackWin event={event} />
           </StyledBody>
-        </Card>
+        </Card> */}
+        {winner === EventWinner.UNDEFINED ? <HackWin event={event} /> : "Winner already set"}
 
         {makerSignatures
+          ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
           ?.map(m => {
             // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
             return [
@@ -373,6 +375,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
         )}
 
         {markets
+          ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
           ?.map(m => {
             // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
             return [
