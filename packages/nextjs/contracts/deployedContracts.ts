@@ -669,7 +669,7 @@ const deployedContracts = {
       },
     },
     TopsportsEventCore: {
-      address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
+      address: "0x9a359cdf40C4bcc94FbBf893b23DDD56e10E032c",
       abi: [
         {
           inputs: [],
@@ -1193,7 +1193,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TopsportsEventFactory: {
-      address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
       abi: [
         {
           inputs: [],
@@ -1483,7 +1483,7 @@ const deployedContracts = {
       },
     },
     TopsportsFunctionsConsumer: {
-      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
       abi: [
         {
           inputs: [
@@ -1791,7 +1791,7 @@ const deployedContracts = {
       },
     },
     TopsportsMakerCore: {
-      address: "0x53EA15882246211fd4CCbe1C52A487437575A9f9",
+      address: "0xFf4c45EcD0C66664fd72F1d7772bb93AFB47eBb0",
       abi: [
         {
           inputs: [],
@@ -2175,7 +2175,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     TopsportsMakerFactory: {
-      address: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      address: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
       abi: [
         {
           inputs: [],
