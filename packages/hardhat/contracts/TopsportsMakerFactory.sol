@@ -5,5 +5,7 @@ import {GenericFactory} from "./utils/GenericFactory.sol";
 import {TopsportsMakerCore} from "./TopsportsMakerCore.sol";
 
 contract TopsportsMakerFactory is GenericFactory {
-    constructor() GenericFactory(address(new TopsportsMakerCore())) {}
+    constructor() GenericFactory(address(new TopsportsMakerCore())) {
+        // solhint-disable-previous-line no-empty-blocks
+    }
 }
