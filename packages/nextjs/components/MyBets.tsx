@@ -173,7 +173,7 @@ const MyBets = () => {
   const [eventsDetails, setEventsDetails] = useState<{ [address: string]: DeployedEvent }>({});
 
   useEffect(() => {
-    if (account.address === undefined) {
+    if (account.address === undefined || TopsportsEventFactory === undefined || deployedContractData === undefined) {
       return;
     }
 
@@ -184,32 +184,34 @@ const MyBets = () => {
       for (i = 0n; ; i++) {
         // while (true) {
         try {
-          const result = toBetInfo(
-            (await TopsportsEventFactory?.read.betsByAddress([account.address as string, i])) as BetInfoArray,
-          );
-          newBets.push(result);
+          const result = await TopsportsEventFactory.read.betsByAddress([account.address as string, i]);
+          if (!result) {
+            break;
+          }
+          const betInfo = toBetInfo(result as BetInfoArray);
+          newBets.push(betInfo);
 
           const TopsportsEventCore = getContract({
-            address: result.eventContract,
+            address: betInfo.eventContract,
             abi: deployedContractData?.abi as Contract<ContractName>["abi"],
             publicClient,
           });
 
-          if (!eventsDetails[result.eventContract]) {
-            const response = await fetch("/api/deployedEvent?address=" + result.eventContract);
+          if (!eventsDetails[betInfo.eventContract]) {
+            const response = await fetch("/api/deployedEvent?address=" + betInfo.eventContract);
             const event = (await response.json()) as DeployedEvent;
-            setEventsDetails(prev => ({ ...prev, [result.eventContract]: event }));
+            setEventsDetails(prev => ({ ...prev, [betInfo.eventContract]: event }));
           }
           // If the event contract is not in allMarkets, fetch all markets for that contract
-          if (!allMarkets[result.eventContract]) {
+          if (!allMarkets[betInfo.eventContract]) {
             const markets = (await TopsportsEventCore.read.getAllMarkets()) as Market[];
-            setAllMarkets(prev => ({ ...prev, [result.eventContract]: markets }));
+            setAllMarkets(prev => ({ ...prev, [betInfo.eventContract]: markets }));
 
             const winner = (await TopsportsEventCore.read.winner()) as number;
-            setEventWinner(prev => ({ ...prev, [result.eventContract]: winner })); // XXX race?
+            setEventWinner(prev => ({ ...prev, [betInfo.eventContract]: winner })); // XXX race?
 
             const wager = (await TopsportsEventCore.read.wagerByAddress([account.address as string])) as WagerArray;
-            setEventWager(prev => ({ ...prev, [result.eventContract]: toWager(wager) }));
+            setEventWager(prev => ({ ...prev, [betInfo.eventContract]: toWager(wager) }));
           }
         } catch (error) {
           // ContractFunctionExecutionError: The contract function "betsByAddress" reverted with the following reason:
@@ -218,7 +220,6 @@ const MyBets = () => {
           break;
         }
       }
-      console.log("set newBets", newBets);
       setBets(newBets);
     };
     fetchContractEvent();
@@ -226,7 +227,6 @@ const MyBets = () => {
   });
 
   const retp = (betInfo: BetInfo) => {
-    console.log("retp", betInfo);
     try {
       const p: BetStatusProps = {
         choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
