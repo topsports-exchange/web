@@ -299,7 +299,9 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
                   <p>{event.eventDate.toString()}</p>
                   <p>{(event.venue as unknown as Venue).name}</p>
                   <p>NFL, Week X</p>
-                  <p>{<Address address={event.address} />}</p>
+                  <div>
+                    <Address address={event.address} />
+                  </div>
                 </div>
               </div>
             </Card>
