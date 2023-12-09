@@ -107,7 +107,7 @@ async function main() {
 
         const eventDate = new Date(event.startdate * 1000).toJSON();
 
-        await postToApi({ signature, eventDate, ...data });
+        // await postToApi({ signature, eventDate, ...data });
       }
     }
   } catch (error) {

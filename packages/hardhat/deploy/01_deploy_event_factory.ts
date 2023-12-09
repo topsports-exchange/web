@@ -110,13 +110,13 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
     throw new Error("stop");
   }
 
-  await postToApi({
-    eventId: eventId.toString(),
-    displayName,
-    deadline: startdate.toString(), // TODO schema
-    address: contractAddr,
-    eventDate,
-  });
+  // await postToApi({
+  //   eventId: eventId.toString(),
+  //   displayName,
+  //   deadline: startdate.toString(), // TODO schema
+  //   address: contractAddr,
+  //   eventDate,
+  // });
 };
 
 export default deployTopsportsEventFactory;
