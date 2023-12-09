@@ -378,7 +378,7 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
   }
   try {
     let event;
-    const mockEvent = 1;
+    const mockEvent = 0;
     const mockSigs = 0;
     if (!mockEvent) {
       event = await prisma.deployedEvent.findUnique({
