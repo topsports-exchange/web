@@ -63,8 +63,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       // TODO not static 31337/hardhat
       // read the TopsportsEventCore at the address and verify eventId
-      // const provider = new JsonRpcProvider(process.env.RPC_ENDPOINT_URL ?? "" as `http://${string}`);
-      const provider = new JsonRpcProvider("http://127.0.0.1:8545" as `http://${string}`);
+      const provider = new JsonRpcProvider(process.env.RPC_ENDPOINT_URL ?? ("" as `http://${string}`));
+      // const provider = new JsonRpcProvider("http://127.0.0.1:8545" as `http://${string}`);
       const TopsportsEventCore = new ethers.Contract(
         address,
         deployedContractsData[31337].TopsportsEventCore.abi,
