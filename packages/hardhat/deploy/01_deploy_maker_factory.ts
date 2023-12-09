@@ -110,7 +110,7 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     // event possibly not deployed yet or saved in db
     const eventDate = "2023-08-12T00:00:00Z"; // TODO from espn
 
-    await postToApi({ signature, eventDate, ...data });
+    // await postToApi({ signature, eventDate, ...data });
   }
 };
 
