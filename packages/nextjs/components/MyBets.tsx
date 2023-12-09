@@ -305,6 +305,9 @@ const MyBets = () => {
     margin: "10px",
   });
 
+  if (!allMarkets || !eventsDetails) {
+    return <p>Loading...</p>;
+  }
   return (
     <div>
       <Card title="My Bets">
