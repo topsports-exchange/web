@@ -15,7 +15,6 @@ import { GetServerSideProps } from "next";
 import { usePublicClient } from "wagmi";
 import { erc20ABI } from "wagmi";
 import { useContractWrite } from "wagmi";
-import { MyBetsTabs } from "~~/components/MyBetsTabs";
 import OpenMarketCard from "~~/components/OpenMarketCard";
 import { Address } from "~~/components/scaffold-eth/Address";
 import deployedContractsData from "~~/contracts/deployedContracts";
@@ -29,6 +28,8 @@ import {
   Team,
   Venue,
 } from "~~/interfaces/interfaces";
+import { MetaHeader } from "~~/components/MetaHeader";
+import Layout from "~~/components/Layout";
 
 // import { useStyletron } from 'baseui';
 
@@ -196,7 +197,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
     };
     fetchDataFromApi();
     fetchContractEvent();
-  }, [eventId, event, publicClient]);
+  }, [eventId, event, publicClient, useMarkets]);
 
   if (!event || !eventDisplayDetails || !contractEventId) {
     return <div>Event loading...</div>;
@@ -221,46 +222,49 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   // ];
 
   return (
-    <div className="grid grid-cols-3 gap-4">
-      <div className="col-span-2">
-        <Card>
-          <div className="join">
+    <>
+      <MetaHeader />
+      <Layout>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="col-span-2">
             <Card>
               <div className="join">
-                <div>
-                  <img src={(event.homeTeam as unknown as Team).logo} alt="" style={{ width: "150px" }} />
-                  {(event.homeTeam as unknown as Team).name}
-                </div>
-                <div className="pt-16 text-6xl font-bold">X</div>
-                <div>
-                  <img src={(event.awayTeam as unknown as Team).logo} alt="" style={{ width: "150px" }} />
-                  {(event.awayTeam as unknown as Team).name}
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <div className="join">
-                <div className="text-lg">
-                  <p>Kick off</p>
-                  <p>Venue</p>
-                  <p>Competition</p>
-                  <p>Smart Contract</p>
-                </div>
-                <div className="text-lg font-bold">
-                  <p>{event.eventDate.toString()}</p>
-                  <p>{(event.venue as unknown as Venue).name}</p>
-                  <p>NFL, Week X</p>
-                  <div>
-                    <Address address={event.address} />
+                <Card>
+                  <div className="join">
+                    <div>
+                      <img src={(event.homeTeam as unknown as Team).logo} alt="" style={{ width: "150px" }} />
+                      {(event.homeTeam as unknown as Team).name}
+                    </div>
+                    <div className="pt-16 text-6xl font-bold">X</div>
+                    <div>
+                      <img src={(event.awayTeam as unknown as Team).logo} alt="" style={{ width: "150px" }} />
+                      {(event.awayTeam as unknown as Team).name}
+                    </div>
                   </div>
-                </div>
+                </Card>
+
+                <Card>
+                  <div className="join">
+                    <div className="text-lg">
+                      <p>Kick off</p>
+                      <p>Venue</p>
+                      <p>Competition</p>
+                      <p>Smart Contract</p>
+                    </div>
+                    <div className="text-lg font-bold">
+                      <p>{event.eventDate.toString()}</p>
+                      <p>{(event.venue as unknown as Venue).name}</p>
+                      <p>NFL, Week X</p>
+                      <div>
+                        <Address address={event.address} />
+                      </div>
+                    </div>
+                  </div>
+                </Card>
               </div>
             </Card>
-          </div>
-        </Card>
 
-        {/* <Card
+            {/* <Card
           title="Event Details"
           overrides={{ Root: { style: { width: "328px", float: "left", margin: "20px" } } }}
           // headerImage={
@@ -284,96 +288,98 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
           </StyledBody>
         </Card> */}
 
-        {winner === EventWinner.UNDEFINED ? <HackWin event={event} /> : "Winner already set"}
+            {winner === EventWinner.UNDEFINED ? <HackWin event={event} /> : "Winner already set"}
 
-        {makerSignatures
-          ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
-          ?.map(m => {
-            // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
-            return [
-              "Use",
-              eventDisplayDetails.homeTeamName,
-              eventDisplayDetails.awayTeamName,
-              "Limit",
-              "Deadline",
-              <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
-                Get in &gt;&gt;
-              </Button>,
-              m.homeTeamOdds,
-              m.awayTeamOdds,
-              m.limit,
-              new Date(1000 * parseInt(m.deadline)).toLocaleString(),
-            ];
-          })
-          .map((row, rowIndex) => (
-            <Card
-              key={rowIndex}
-              title={"Market #" + makerSignatures[rowIndex].id}
-              overrides={{ Root: { style: { display: "contents" } } }}
-            >
-              <OpenMarketCard
-                team1={event.homeTeam}
-                team2={event.awayTeam}
-                activeAmount={null}
-                totalAmount={event.limit}
-                setSelectedMatch={() => setMakerSignatureId(event.id)}
+            {makerSignatures
+              ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
+              ?.map(m => {
+                // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
+                return [
+                  "Use",
+                  eventDisplayDetails.homeTeamName,
+                  eventDisplayDetails.awayTeamName,
+                  "Limit",
+                  "Deadline",
+                  <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
+                    Get in &gt;&gt;
+                  </Button>,
+                  m.homeTeamOdds,
+                  m.awayTeamOdds,
+                  m.limit,
+                  new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+                ];
+              })
+              .map((row, rowIndex) => (
+                <Card
+                  key={rowIndex}
+                  title={"Market #" + makerSignatures[rowIndex].id}
+                  overrides={{ Root: { style: { display: "contents" } } }}
+                >
+                  <OpenMarketCard
+                    team1={event.homeTeam}
+                    team2={event.awayTeam}
+                    activeAmount={null}
+                    totalAmount={event.limit}
+                    setSelectedMatch={() => setMakerSignatureId(event.id)}
+                  />
+                  <StyledBody>
+                    <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
+                      {row.map((cell, cellIndex) => (
+                        <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                      ))}
+                    </StyledTable>
+                  </StyledBody>
+                </Card>
+              ))}
+
+            {makerSignatureId && tokenAddress && (
+              <TakeSig
+                event={event}
+                tokenAddress={tokenAddress}
+                makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
               />
-              <StyledBody>
-                <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
-                  {row.map((cell, cellIndex) => (
-                    <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                  ))}
-                </StyledTable>
-              </StyledBody>
-            </Card>
-          ))}
+            )}
 
-        {makerSignatureId && tokenAddress && (
-          <TakeSig
-            event={event}
-            tokenAddress={tokenAddress}
-            makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
-          />
-        )}
-
-        {useMarkets &&
-          markets
-            ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
-            ?.map(m => {
-              // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
-              return [
-                "Maker",
-                eventDisplayDetails.homeTeamName,
-                eventDisplayDetails.awayTeamName,
-                "Limit",
-                "Deadline",
-                "Bets",
-                m.maker,
-                m.homeTeamOdds.toString(),
-                m.awayTeamOdds.toString(),
-                m.limit.toString(),
-                new Date(1000 * parseInt(m.deadline)).toLocaleString(),
-                <Button key={m.id} onClick={() => console.log("this bets:", m.bets)}>
-                  Log {m.bets.length}
-                </Button>,
-              ];
-            })
-            .map((row, rowIndex) => (
-              <Card key={rowIndex} title={"Open Market"} overrides={{ Root: { style: { display: "contents" } } }}>
-                <StyledBody>
-                  <StyledTable role="grid" $gridTemplateColumns="repeat(6,1fr)">
-                    {row.map((cell, cellIndex) => (
-                      <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                    ))}
-                  </StyledTable>
-                </StyledBody>
-              </Card>
-            ))}
-      </div>
-      <div className="col-span-1">
-        <MyBetsTabs />
-      </div>
-    </div>
+            {useMarkets &&
+              markets
+                ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
+                ?.map(m => {
+                  // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
+                  return [
+                    "Maker",
+                    eventDisplayDetails.homeTeamName,
+                    eventDisplayDetails.awayTeamName,
+                    "Limit",
+                    "Deadline",
+                    "Bets",
+                    m.maker,
+                    m.homeTeamOdds.toString(),
+                    m.awayTeamOdds.toString(),
+                    m.limit.toString(),
+                    new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+                    <Button key={m.id} onClick={() => console.log("this bets:", m.bets)}>
+                      Log {m.bets.length}
+                    </Button>,
+                  ];
+                })
+                .map((row, rowIndex) => (
+                  <Card key={rowIndex} title={"Open Market"} overrides={{ Root: { style: { display: "contents" } } }}>
+                    <StyledBody>
+                      <StyledTable role="grid" $gridTemplateColumns="repeat(6,1fr)">
+                        {row.map((cell, cellIndex) => (
+                          <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                        ))}
+                      </StyledTable>
+                    </StyledBody>
+                  </Card>
+                ))}
+          </div>
+          {/* <div className="col-span-1">
+            <MyBetsTabs />
+          </div> */}
+        </div>
+      </Layout>
+    </>
   );
 };
 

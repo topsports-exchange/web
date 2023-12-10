@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
-import { Header } from "./Header";
+// import { Header } from "./Header"; // in _app.tsx, before main
 import Menu from "./Menu";
-import { MyBets } from "./MyBets";
+// import { MyBets } from "./MyBets"; // unused?
+import { MyBetsTabs } from "~~/components/MyBetsTabs";
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,7 +10,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex min-h-full flex-col">
-      <Header />
+      {/* <Header /> */}
       <div className="mx-auto flex w-full ">
         <aside className="sticky top-8 hidden flex-1 shrink-0 lg:block">
           <Menu />
@@ -19,7 +20,7 @@ export default function Layout({ children }: LayoutProps) {
 
         <aside className="sticky top-8 hidden w-96 shrink-0 xl:block   lg:right-0">
           {" "}
-          <MyBets />
+          <MyBetsTabs />
         </aside>
       </div>
     </div>

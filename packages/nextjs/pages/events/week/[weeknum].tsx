@@ -5,6 +5,8 @@ import { GetServerSideProps } from "next";
 import { EventList } from "~~/components/EventList";
 import { MyBetsTabs } from "~~/components/MyBetsTabs";
 import { customDeserializer, customSerializer } from "~~/utils/serial";
+import { MetaHeader } from "~~/components/MetaHeader";
+import Layout from "~~/components/Layout";
 
 interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "startdate"> {
   eventDate: string;
@@ -49,24 +51,29 @@ const WeekPage = ({ weekNumber, events }: WeekProps) => {
     router.push(`/events/${match}`);
   };
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-zinc-950 text-white">
-      {/* Sidebar: SportsList */}
-      {/* <div className="w-full md:w-1/6 xl:w-1/5 p-4"><SportsList /></div> */}
+    <>
+      <MetaHeader />
+      <Layout>
+        <div className="flex flex-col md:flex-row min-h-screen bg-zinc-950 text-white">
+          {/* Sidebar: SportsList */}
+          {/* <div className="w-full md:w-1/6 xl:w-1/5 p-4"><SportsList /></div> */}
 
-      {/* Main content area */}
-      <div className="flex-1 p-4 max-w-3xl">
-        {/* <Featured /> */}
-        {/* <WeekPage weekNumber={14} events={events} />
+          {/* Main content area */}
+          <div className="flex-1 p-4 max-w-3xl">
+            {/* <Featured /> */}
+            {/* <WeekPage weekNumber={14} events={events} />
         <BetPage /> */}
-        <h1 className="text-2xl font-bold mb-4">Week {weekNumber}</h1>
-        <EventList setSelectedMatch={setSelectedMatch} events={events} />
-      </div>
+            <h1 className="text-2xl font-bold mb-4">Week {weekNumber}</h1>
+            <EventList setSelectedMatch={setSelectedMatch} events={events} />
+          </div>
 
-      {/* Right sidebar: WalletConnect */}
-      <div className="col-span-1">
-        <MyBetsTabs />
-      </div>
-    </div>
+          {/* Right sidebar: WalletConnect */}
+          <div className="col-span-1">
+            <MyBetsTabs />
+          </div>
+        </div>
+      </Layout>
+    </>
   );
 };
 
