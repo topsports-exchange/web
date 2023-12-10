@@ -16,7 +16,7 @@ export const MyBetsTabs = () => {
     betInfoIsHistory,
   } = useBets();
 
-  const renderTabContent = () => {
+  const renderTabContent = (activeTab: string) => {
     if (!betsLoaded || !eventsLoaded) {
       return <div>Loading...</div>;
     }
@@ -39,7 +39,7 @@ export const MyBetsTabs = () => {
         {isLogged ? (
           <>
             <MyBetsLoggedIn setActiveTab={setActiveTab} activeTab={activeTab} />
-            {renderTabContent()}
+            {renderTabContent(activeTab)}
           </>
         ) : (
           <MyBetsNotLogged />
@@ -138,6 +138,7 @@ const Tabs = ({ setActiveTab, activeTab }: { setActiveTab: (value: string) => vo
 const TabWins = (args: { bets: BetInfo[] }) => {
   return (
     <>
+      {/* win {args.bets.length} */}
       {args.bets.map((bet, index) => (
         <TabBet key={index} bet={bet} />
       ))}
@@ -147,12 +148,26 @@ const TabWins = (args: { bets: BetInfo[] }) => {
 const TabPending = (args: { bets: BetInfo[] }) => {
   return (
     <>
+      {/* pend {args.bets.length} */}
       {args.bets.map((bet, index) => (
         <TabBet key={index} bet={bet} />
       ))}
     </>
   );
 };
+const TabHistory = (args: { bets: BetInfo[] }) => {
+  console.log("args", args);
+  //return <div>{/* Content for History Tab */}</div>;
+  return (
+    <>
+      {/* hist {args.bets.length} */}
+      {args.bets.map((bet, index) => (
+        <TabBet key={index} bet={bet} />
+      ))}
+    </>
+  );
+};
+
 const TabBet = (args: { bet: BetInfo }) => {
   const { bet } = args;
   const { getBetWithEvent } = useBets();
@@ -204,9 +219,4 @@ const TabBet = (args: { bet: BetInfo }) => {
       )}
     </>
   );
-};
-
-const TabHistory = (args: { bets: BetInfo[] }) => {
-  console.log("args", args);
-  return <div>{/* Content for History Tab */}</div>;
 };
