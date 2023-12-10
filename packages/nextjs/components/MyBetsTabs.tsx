@@ -20,6 +20,7 @@ export const MyBetsTabs = () => {
     if (!betsLoaded || !eventsLoaded) {
       return <div>Loading...</div>;
     }
+    // console.log("bets:", bets, bets.filter(betInfoIsPending), bets.filter(betInfoIsWon));
     switch (activeTab) {
       case "pending":
         return <TabPending bets={bets.filter(betInfoIsPending)} />;
