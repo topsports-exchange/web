@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { MakerSignature, PrismaClient } from "@prisma/client";
 import { Button } from "baseui/button";
-import { Card } from "baseui/card";
 // import {
 //   // StyledHeadCell,
 //   StyledBodyCell,
@@ -227,126 +226,89 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
     <>
       <MetaHeader />
       <Layout>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="col-span-2">
-            <Card>
-              <div className="join">
-                <Card>
-                  <div className="join">
-                    <div>
-                      <img src={(event.homeTeam as unknown as Team).logo} alt="" style={{ width: "150px" }} />
-                      {(event.homeTeam as unknown as Team).name}
-                    </div>
-                    <div className="pt-16 text-6xl font-bold">X</div>
-                    <div>
-                      <img src={(event.awayTeam as unknown as Team).logo} alt="" style={{ width: "150px" }} />
-                      {(event.awayTeam as unknown as Team).name}
-                    </div>
-                  </div>
-                </Card>
-
-                <Card>
-                  <div className="join">
-                    <div className="text-lg">
-                      <p>Kick off</p>
-                      <p>Venue</p>
-                      <p>Competition</p>
-                      <p>Smart Contract</p>
-                    </div>
-                    <div className="text-lg font-bold">
-                      <p>{event.eventDate.toString()}</p>
-                      <p>{(event.venue as unknown as Venue).name}</p>
-                      <p>NFL, Week X</p>
-                      <div>
-                        <Address address={event.address} />
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+        <div className="grid grid-cols-2 gap-4 bg-black">
+          <div className="bg-black p-4 mb-4">
+            <div className="flex justify-center items-center space-x-8">
+              <div className="text-center">
+                <img src={(event.homeTeam as unknown as Team).logo} alt="" className="w-24 h-24 object-contain" />
+                <p className="text-white mt-2">{(event.homeTeam as unknown as Team).name}</p>
               </div>
-            </Card>
+              <div className="text-6xl font-bold text-white">X</div>
+              <div className="text-center">
+                <img src={(event.awayTeam as unknown as Team).logo} alt="" className="w-24 h-24 object-contain" />
+                <p className="text-white mt-2">{(event.awayTeam as unknown as Team).name}</p>
+              </div>
+            </div>
+          </div>
 
-            {/* <Card
-          title="Event Details"
-          overrides={{ Root: { style: { width: "328px", float: "left", margin: "20px" } } }}
-          // headerImage={
-          //   'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/chi.png'
-          // }
-        >
-          <StyledBody>
-            <p>
-              Event ID from URL / Contract: {eventId} / {contractEventId}
-            </p>
-            <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
-              {DATA.map((row, rowIndex) => (
-                <div key={rowIndex} role="row" style={{ display: "contents" }}>
-                  {row.map((cell, cellIndex) => (
-                    <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                  ))}
+          <div className="bg-black p-4">
+            <div className="flex justify-between items-center">
+              <div className="text-lg text-white">
+                <p>Kick off</p>
+                <p>Venue</p>
+                <p>Competition</p>
+                <p>Smart Contract</p>
+              </div>
+              <div className="text-lg font-bold text-white">
+                <p>{new Date(event.eventDate).toLocaleString("en-US")}</p>
+                <p>{(event.venue as unknown as Venue).name}</p>
+                <p>NFL, Week X</p>
+                <div>
+                  <Address address={event.address} />
                 </div>
-              ))}
-            </StyledTable>
-            <HackWin event={event} />
-          </StyledBody>
-        </Card> */}
+              </div>
+            </div>
+          </div>
+        </div>
 
-            {winner === EventWinner.UNDEFINED ? <HackWin event={event} /> : "Winner already set"}
+        {winner === EventWinner.UNDEFINED ? <HackWin event={event} /> : "Winner already set"}
 
-            {makerSignatures
-              ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
-              // ?.map(m => {
-              //   // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
-              //   return [
-              //     "Use",
-              //     eventDisplayDetails.homeTeamName,
-              //     eventDisplayDetails.awayTeamName,
-              //     "Limit",
-              //     "Deadline",
-              //     <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
-              //       Get in &gt;&gt;
-              //     </Button>,
-              //     m.homeTeamOdds,
-              //     m.awayTeamOdds,
-              //     m.limit,
-              //     new Date(1000 * parseInt(m.deadline)).toLocaleString(),
-              //   ];
-              // })
-              .map((row, rowIndex) => (
-                <Card
-                  key={rowIndex}
-                  title={"Market #" + makerSignatures[rowIndex].id}
-                  overrides={{ Root: { style: { display: "contents" } } }}
-                >
-                  <OpenMarketCard
-                    team1={event.homeTeam}
-                    team2={event.awayTeam}
-                    activeAmount={null}
-                    totalAmount={row.limit}
-                    setSelectedMatch={() => {
-                      setPlaceBetModalData(event as BetInterface);
-                      setPlaceBetModalOpen(true);
-                      setMakerSignatureId(makerSignatures[rowIndex].id);
-                    }}
-                  />
-                  {/* <StyledBody>
-                    <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
-                      {row.map((cell, cellIndex) => (
-                        <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                      ))}
-                    </StyledTable>
-                  </StyledBody> */}
-                </Card>
-              ))}
-
-            {makerSignatureId && tokenAddress && account && (
-              <PlaceBetPopup
-                accountAddress={account.address as string}
-                event={event}
-                tokenAddress={tokenAddress ?? "0x000000000000000000"}
-                makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
-              />
-            )}
-            {/* {makerSignatureId && tokenAddress && (
+        <div className="grid grid-cols-2 gap-4">
+          {makerSignatures
+            ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
+            // ?.map(m => {
+            //   // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
+            //   return [
+            //     "Use",
+            //     eventDisplayDetails.homeTeamName,
+            //     eventDisplayDetails.awayTeamName,
+            //     "Limit",
+            //     "Deadline",
+            //     <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
+            //       Get in &gt;&gt;
+            //     </Button>,
+            //     m.homeTeamOdds,
+            //     m.awayTeamOdds,
+            //     m.limit,
+            //     new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+            //   ];
+            // })
+            .map((row, rowIndex) => (
+              <div className="w-100" key={rowIndex}>
+                <OpenMarketCard
+                  // className={rowIndex % 2 === 0 ? "row-start-1" : "row-start-2"}
+                  team1={event.homeTeam}
+                  team2={event.awayTeam}
+                  activeAmount={null}
+                  totalAmount={row.limit}
+                  setSelectedMatch={() => {
+                    setPlaceBetModalData(event as BetInterface);
+                    setPlaceBetModalOpen(true);
+                    setMakerSignatureId(makerSignatures[rowIndex].id);
+                  }}
+                />
+              </div>
+            ))}
+        </div>
+        {makerSignatureId && tokenAddress && account && (
+          <PlaceBetPopup
+            accountAddress={account.address as string}
+            event={event}
+            tokenAddress={tokenAddress ?? "0x000000000000000000"}
+            makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
+          />
+        )}
+        {/* {makerSignatureId && tokenAddress && (
               <TakeSig
                 event={event}
                 tokenAddress={tokenAddress}
@@ -354,7 +316,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
               />
             )} */}
 
-            {/* {useMarkets &&
+        {/* {useMarkets &&
               markets
                 ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
                 ?.map(m => {
@@ -387,11 +349,11 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
                     </StyledBody>
                   </Card>
                 ))} */}
-          </div>
-          {/* <div className="col-span-1">
+        {/* </div> */}
+        {/* <div className="col-span-1">
             <MyBetsTabs />
           </div> */}
-        </div>
+        {/* </div> */}
       </Layout>
     </>
   );
