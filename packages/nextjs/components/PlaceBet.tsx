@@ -17,7 +17,6 @@ export interface BetInterface {
 export const PlaceBetPopup = ({ betData }: { betData: BetInterface }) => {
   const [isPopupOpen, setPopupOpen] = useState(true);
 
-  const openPopup = () => setPopupOpen(true);
   const closePopup = () => setPopupOpen(false);
   return (
     <Popup isOpen={isPopupOpen} onClose={closePopup}>

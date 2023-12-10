@@ -4,7 +4,6 @@ import localFont from "@next/font/local";
 import { DeployedEvent, PrismaClient } from "@prisma/client";
 import { GetServerSideProps, NextPage } from "next";
 import { EventListItem } from "~~/components/EventListItem";
-import { MyBets } from "~~/components/MyBets";
 import { MyBetsTabs } from "~~/components/MyBetsTabs";
 import OpenMarketCard from "~~/components/OpenMarketCard";
 import { customDeserializer, customSerializer } from "~~/utils/serial";
@@ -62,7 +61,7 @@ const mockData: BetItemCardProps[] = [
   // Add more objects for more cards
 ];
 
-const sportypo = localFont({
+export const sportypo = localFont({
   src: [
     {
       path: "../public/fonts/Sportypo/Sportypo-Reguler-Demo.ttf",
@@ -107,7 +106,7 @@ const Match = ({ setSelectedMatch }: { setSelectedMatch?: (match: string | null)
     </div>
   );
 };
-const BetPage = () => {
+export const BetPage = () => {
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
 
   return (
@@ -123,7 +122,7 @@ const BetList = ({ setSelectedMatch }: { setSelectedMatch?: (match: string | nul
     ))}
   </div>
 );
-const WeekList = () => (
+export const WeekList = () => (
   <div className="flex justify-center items-center my-4 space-x-2">
     {/* Iterate over an array of weeks. This is just an example, you can replace it with your actual weeks data. */}
     {["All", "Week 7", "Week 8", "Week 9", "Week 10", "Week 11", "Week 12"].map((week, index) => (
@@ -138,14 +137,14 @@ const WeekList = () => (
     ))}
   </div>
 );
-const WalletConnect = () => (
+export const WalletConnect = () => (
   <div className="bg-red-900 text-white w-48 h-44 rounded-2xl p-4 flex flex-col justify-between">
     <div className="font-semibold">Wallet</div>
     <div className="text-sm">Address: 0xa5...92cc</div>
     <button className="bg-green-500 px-4 py-2 rounded-full">Connect Wallet</button>
   </div>
 );
-const CustomHeader = () => (
+export const CustomHeader = () => (
   <div className="bg-black text-white flex justify-between items-center p-4">
     <div className="flex items-center">
       {/* Logo and Title */}

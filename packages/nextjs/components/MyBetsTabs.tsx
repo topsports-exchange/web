@@ -3,28 +3,6 @@ import { BetInterface, PlaceBetPopup } from "./PlaceBet";
 import { useBets } from "~~/hooks/useBets";
 import { BetInfo } from "~~/interfaces/interfaces";
 
-const betMock: Bet = {
-  teamLogo: "/assets/LA.png", // Replace with actual image path
-  teamName: "Team Name", // Replace with actual team name
-  opponentLogo: "/assets/kansas.png", // Replace with actual image path
-  opponentName: "Opponent Name", // Replace with actual opponent name
-  odds: "3.5X", // Replace with actual odds
-  stake: "$50", // Replace with actual stake amount
-  potentialWinnings: "$175", // Replace with actual potential winnings
-  actionText: "Claim 25 USDC", // Replace with actual action text
-};
-
-interface Bet {
-  teamLogo: string;
-  teamName: string;
-  opponentLogo: string;
-  opponentName: string;
-  odds: string;
-  stake: string;
-  potentialWinnings: string;
-  actionText?: string;
-}
-
 const betDataMock: BetInterface = {
   teams: [
     {
@@ -44,7 +22,7 @@ const betDataMock: BetInterface = {
 };
 
 export const MyBetsTabs = () => {
-  const [isLogged, setIsLogged] = useState(true);
+  const [isLogged] = useState(true);
   const [activeTab, setActiveTab] = useState("pending"); // Added state for active tab
   const { bets } = useBets();
 
@@ -53,7 +31,7 @@ export const MyBetsTabs = () => {
       case "pending":
         return <TabPending bets={bets} />; // Replace with actual pending bets
       case "wins":
-        return <TabWins bets={[betMock, { ...betMock, actionText: undefined }]} />;
+        return <TabWins bets={[]} />;
       case "history":
         return <TabHistory />;
       default:

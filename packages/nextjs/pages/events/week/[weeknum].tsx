@@ -1,11 +1,6 @@
 // pages/events/week/[weeknum].tsx
 import { useRouter } from "next/router";
 import { DeployedEvent, PrismaClient } from "@prisma/client";
-import { withStyle } from "baseui";
-import {
-  // StyledHeadCell,
-  StyledBodyCell,
-} from "baseui/table-grid";
 import { GetServerSideProps } from "next";
 import { EventList } from "~~/components/EventList";
 import { MyBetsTabs } from "~~/components/MyBetsTabs";
@@ -49,14 +44,6 @@ const WeekPage = ({ weekNumber, events }: WeekProps) => {
   // console.log('events', events);
   // const thisWeek = getWeekNumberFromDate(new Date());
   const router = useRouter();
-  const thisWeek = weekNumber;
-  const weeks = Array(6)
-    .fill(null)
-    .map((_, i) => -3 + i + thisWeek);
-  const StyledEventBodyCell = withStyle(StyledBodyCell, {
-    border: "1px solid black",
-    margin: "10px",
-  });
 
   const setSelectedMatch = (match: string | null) => {
     router.push(`/events/${match}`);
@@ -71,6 +58,7 @@ const WeekPage = ({ weekNumber, events }: WeekProps) => {
         {/* <Featured /> */}
         {/* <WeekPage weekNumber={14} events={events} />
         <BetPage /> */}
+        <h1 className="text-2xl font-bold mb-4">Week {weekNumber}</h1>
         <EventList setSelectedMatch={setSelectedMatch} events={events} />
       </div>
 
