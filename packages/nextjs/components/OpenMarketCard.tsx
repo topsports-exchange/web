@@ -31,18 +31,22 @@ const OpenMarketCard: React.FC<IOpenMarketCardProps> = ({
         </div>
         <span className="text-red-400">{team2.odds}</span>
       </div>
-      <div className="mb-4">
-        <span className="text-sm">Active</span>
-        <div className="w-full bg-gray-700 rounded-full h-2.5 dark:bg-gray-700">
-          <div
-            className="bg-green-500 h-2.5 rounded-full"
-            style={{ width: `${(activeAmount / totalAmount) * 100}%` }}
-          ></div>
-        </div>
-      </div>
-      <div className="flex justify-between items-center mb-4">
-        <span className="text-sm">{`$${activeAmount} / $${totalAmount}`}</span>
-      </div>
+      {activeAmount && totalAmount && (
+        <>
+          <div className="mb-4">
+            <span className="text-sm">Active</span>
+            <div className="w-full bg-gray-700 rounded-full h-2.5 dark:bg-gray-700">
+              <div
+                className="bg-green-500 h-2.5 rounded-full"
+                style={{ width: `${(activeAmount / totalAmount) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-sm">{`$${activeAmount} / $${totalAmount}`}</span>
+          </div>
+        </>
+      )}
       <button
         onClick={() => setSelectedMatch?.(null)}
         className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"

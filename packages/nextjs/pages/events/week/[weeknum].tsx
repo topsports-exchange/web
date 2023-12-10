@@ -1,15 +1,14 @@
 // pages/events/week/[weeknum].tsx
-import Link from "next/link";
+import { useRouter } from "next/router";
 import { DeployedEvent, PrismaClient } from "@prisma/client";
 import { withStyle } from "baseui";
-import { Card, StyledBody } from "baseui/card";
 import {
   // StyledHeadCell,
   StyledBodyCell,
-  StyledTable,
 } from "baseui/table-grid";
 import { GetServerSideProps } from "next";
-import MyBets from "~~/components/MyBets";
+import { EventList } from "~~/components/EventList";
+import { MyBetsTabs } from "~~/components/MyBetsTabs";
 import { customDeserializer, customSerializer } from "~~/utils/serial";
 
 interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "startdate"> {
@@ -49,6 +48,7 @@ export function getWeekNumberFromDate(date: Date): number {
 const WeekPage = ({ weekNumber, events }: WeekProps) => {
   // console.log('events', events);
   // const thisWeek = getWeekNumberFromDate(new Date());
+  const router = useRouter();
   const thisWeek = weekNumber;
   const weeks = Array(6)
     .fill(null)
@@ -57,49 +57,26 @@ const WeekPage = ({ weekNumber, events }: WeekProps) => {
     border: "1px solid black",
     margin: "10px",
   });
+
+  const setSelectedMatch = (match: string | null) => {
+    router.push(`/events/${match}`);
+  };
   return (
-    <div>
-      <div className="block mx-auto m-12">
-        {weeks
-          .filter(week => week <= 18)
-          .map((week, index) => (
-            <Link
-              className={
-                "text-center p-4 m-2 mx-2 border-solid rounded-lg " +
-                (week === weekNumber ? "bg-black text-white" : "bg-white text-black")
-              }
-              key={index}
-              href={`/events/week/${week}`}
-            >
-              Week {week}
-            </Link>
-          ))}
+    <div className="flex flex-col md:flex-row min-h-screen bg-zinc-950 text-white">
+      {/* Sidebar: SportsList */}
+      {/* <div className="w-full md:w-1/6 xl:w-1/5 p-4"><SportsList /></div> */}
+
+      {/* Main content area */}
+      <div className="flex-1 p-4 max-w-3xl">
+        {/* <Featured /> */}
+        {/* <WeekPage weekNumber={14} events={events} />
+        <BetPage /> */}
+        <EventList setSelectedMatch={setSelectedMatch} events={events} />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2">
-          <Card title="This Week">
-            <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
-              {events?.map((event, idx) => (
-                <StyledEventBodyCell key={idx}>
-                  <StyledBody>
-                    <Link
-                      className="underline text-blue-600 hover:text-blue-800 visited:text-purple-600"
-                      href={`/events/${event.eventId}`}
-                    >
-                      {event.displayName}
-                    </Link>
-                    <p>{event.eventDate}</p>
-                    <p>Markets: {event.count}</p>
-                  </StyledBody>
-                </StyledEventBodyCell>
-              ))}
-            </StyledTable>
-          </Card>
-        </div>
-        <div className="col-span-1">
-          <MyBets />
-        </div>
+      {/* Right sidebar: WalletConnect */}
+      <div className="col-span-1">
+        <MyBetsTabs />
       </div>
     </div>
   );

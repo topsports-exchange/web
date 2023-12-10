@@ -82,8 +82,8 @@ const ScaffoldEthApp = ({ Component, pageProps }: AppProps) => {
           <BaseProvider theme={LightTheme}>
             {/* <Centered> */}
             {/* <StatefulInput /> */}
-            <div className={`${poppins.variable} font-sans flex flex-col min-h-screen`}>
-              {/* <Header /> */}
+            <div className={`${poppins.variable} font-sans flex flex-col min-h-screen bg-gray-950 text-white`}>
+              <Header />
               <main className="relative flex flex-col flex-1">
                 <Component {...pageProps} />
               </main>

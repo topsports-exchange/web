@@ -9,54 +9,19 @@ import { getContract } from "viem";
 import { useContractWrite, usePublicClient } from "wagmi";
 import { useAccount } from "wagmi";
 import { useDeployedContractInfo, useScaffoldContract } from "~~/hooks/scaffold-eth/";
+import { canClaimAmount, didResolve, isPending, toBetInfo, toWager, youWon } from "~~/hooks/utils";
+import {
+  BetInfo,
+  BetInfoArray,
+  BetStatusProps,
+  EventWinner,
+  Market,
+  Team,
+  Wager,
+  WagerArray,
+} from "~~/interfaces/interfaces";
 // import deployedContractsData from "~~/contracts/deployedContracts";
 import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
-
-enum EventWinner {
-  UNDEFINED,
-  HOME_TEAM,
-  AWAY_TEAM,
-}
-interface Bet {
-  taker: string;
-  stake: bigint;
-  profit: bigint;
-  winner: EventWinner;
-}
-interface Market {
-  address: string;
-  maker: string;
-  homeTeamOdds: bigint;
-  awayTeamOdds: bigint;
-  limit: bigint;
-  deadline: bigint;
-  bets: Bet[];
-}
-interface Wager {
-  totalWagered: bigint;
-  totalHomePayout: bigint;
-  totalAwayPayout: bigint;
-}
-type WagerArray = readonly [bigint, bigint, bigint];
-interface BetInfo {
-  eventId: bigint;
-  eventContract: string;
-  startdate: bigint;
-  marketId: bigint;
-  betId: bigint;
-}
-type BetInfoArray = readonly [bigint, string, bigint, bigint, bigint];
-// interface Venue {
-//   name: string;
-//   city: string;
-// }
-interface Team {
-  name: string;
-  id: string;
-  homeAway: string;
-  logo: string;
-  moneylines: number[];
-}
 
 // const eventWinnerString = (winner: EventWinner): string => {
 //   switch (winner) {
@@ -69,20 +34,6 @@ interface Team {
 //       return "UNDEFINED";
 //   }
 // };
-
-const toWager = ([totalWagered, totalHomePayout, totalAwayPayout]: WagerArray): Wager => ({
-  totalWagered,
-  totalHomePayout,
-  totalAwayPayout,
-});
-
-const toBetInfo = ([eventId, eventContract, startdate, marketId, betId]: BetInfoArray): BetInfo => ({
-  eventId,
-  eventContract,
-  startdate,
-  marketId,
-  betId,
-});
 
 // function collect(address _to) external returns (uint256 amount) {
 //   // solhint-disable-next-line not-rely-on-time
@@ -106,41 +57,6 @@ const toBetInfo = ([eventId, eventContract, startdate, marketId, betId]: BetInfo
 //   // Uncomment the following line if you want to emit a Claimed event
 //   // emit Claimed(payout);
 // }
-interface BetStatusProps {
-  choice: EventWinner;
-  eventDate: Date;
-  winner: EventWinner;
-  wager: Wager;
-}
-const t24hours = 3600 * 24 * 1000;
-// const t24hours = 3600 * 1 * 1000;
-const wontResolve = (p: BetStatusProps) => {
-  return new Date().valueOf() >= p.eventDate.valueOf() + t24hours && p.winner === EventWinner.UNDEFINED;
-};
-const isPending = (p: BetStatusProps) => {
-  return new Date().valueOf() < p.eventDate.valueOf() + t24hours && p.winner === EventWinner.UNDEFINED;
-};
-const didResolve = (p: BetStatusProps) => {
-  return p.winner !== EventWinner.UNDEFINED;
-};
-const youWon = (p: BetStatusProps) => {
-  return p.winner === p.choice;
-};
-const canClaimAmount = (p: BetStatusProps) => {
-  if (!p.wager) {
-    debugger;
-  }
-  if (wontResolve(p) && p.wager.totalWagered > 0n) {
-    return p.wager.totalWagered;
-  }
-  if (didResolve(p) && youWon(p)) {
-    if (p.choice === EventWinner.HOME_TEAM) {
-      // or 0n, already claimed
-      return p.choice === EventWinner.HOME_TEAM ? p.wager.totalHomePayout : p.wager.totalAwayPayout;
-    }
-  }
-  return 0n;
-};
 
 const Claim = ({
   eventAddress,
@@ -223,8 +139,8 @@ const MyBets = () => {
       setBets(newBets);
     };
     fetchContractEvent();
-    // }, [account, allMarkets, publicClient, eventsDetails, TopsportsEventFactory, deployedContractData]);
-  });
+  }, [account, allMarkets, eventsDetails, TopsportsEventFactory?.address, deployedContractData?.address]);
+  // });
 
   const retp = (betInfo: BetInfo) => {
     try {
@@ -265,6 +181,7 @@ const MyBets = () => {
 
   const Bet = ({ betInfo }: { betInfo: BetInfo }) => {
     // if (eventsDetails) debugger;
+    // console.log("RAAAA", betInfo);
     const market = allMarkets[betInfo.eventContract][Number(betInfo.marketId)];
     const bet = market.bets[Number(betInfo.betId)];
     const p = retp(betInfo);
@@ -380,4 +297,4 @@ const MyBets = () => {
   );
 };
 
-export default MyBets;
+export { MyBets };

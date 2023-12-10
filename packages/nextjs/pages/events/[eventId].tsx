@@ -1,7 +1,7 @@
 // pages/events/[eventId].tsx
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { DeployedEvent, MakerSignature, PrismaClient } from "@prisma/client";
+import { MakerSignature, PrismaClient } from "@prisma/client";
 import { Button, KIND as ButtonKind } from "baseui/button";
 import { Card, StyledBody } from "baseui/card";
 import { Modal, ModalBody, ModalButton, ModalFooter, ModalHeader, ROLE, SIZE } from "baseui/modal";
@@ -15,76 +15,24 @@ import { GetServerSideProps } from "next";
 import { usePublicClient } from "wagmi";
 import { erc20ABI } from "wagmi";
 import { useContractWrite } from "wagmi";
-import MyBets from "~~/components/MyBets";
+import { MyBetsTabs } from "~~/components/MyBetsTabs";
+import OpenMarketCard from "~~/components/OpenMarketCard";
 import { Address } from "~~/components/scaffold-eth/Address";
 import deployedContractsData from "~~/contracts/deployedContracts";
+import {
+  Competitor,
+  EventDisplayDetails,
+  EventPageProps,
+  EventWinner,
+  MakerSignatureNormalized,
+  TakeSigProps,
+  Team,
+  Venue,
+} from "~~/interfaces/interfaces";
 
 // import { useStyletron } from 'baseui';
 
 const prisma = new PrismaClient();
-
-interface MakerSignatureNormalized extends Omit<MakerSignature, "eventDate" | "deadlineNormalized"> {
-  deadlineNormalized: string;
-  eventDate: string;
-}
-interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "startdate"> {
-  eventDate: Date | string;
-  startdate: Date | string;
-}
-
-interface Venue {
-  name: string;
-  city: string;
-}
-interface Team {
-  name: string;
-  id: string;
-  homeAway: string;
-  logo: string;
-  moneylines: number[];
-}
-
-// o/r eventDate, deadline
-interface EventPageProps {
-  event: DeployedEventNormalized | null;
-  makerSignatures: MakerSignatureNormalized[] | null;
-}
-
-interface TakeSigProps {
-  event: DeployedEventNormalized;
-  tokenAddress: `0x${string}`;
-  makerSignature: MakerSignatureNormalized;
-}
-
-interface Competitor {
-  homeAway: string;
-  team: {
-    name: string;
-  };
-}
-
-interface EventDisplayDetails {
-  name: string;
-  shortName: string;
-  fullName: string;
-  venue: {
-    fullName: string | undefined;
-    city: string | undefined;
-  };
-  homeTeamName: string | undefined;
-  awayTeamName: string | undefined;
-  status: {
-    name: string | undefined;
-    completed: boolean | undefined;
-    period: number | undefined;
-  };
-}
-
-enum EventWinner {
-  UNDEFINED,
-  HOME_TEAM,
-  AWAY_TEAM,
-}
 
 const HackWin = (props: any) => {
   const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
@@ -363,6 +311,13 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
               title={"Market #" + makerSignatures[rowIndex].id}
               overrides={{ Root: { style: { display: "contents" } } }}
             >
+              <OpenMarketCard
+                team1={event.homeTeam}
+                team2={event.awayTeam}
+                activeAmount={null}
+                totalAmount={event.limit}
+                setSelectedMatch={() => setMakerSignatureId(event.id)}
+              />
               <StyledBody>
                 <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
                   {row.map((cell, cellIndex) => (
@@ -416,7 +371,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
             ))}
       </div>
       <div className="col-span-1">
-        <MyBets />
+        <MyBetsTabs />
       </div>
     </div>
   );
