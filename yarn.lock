@@ -1222,6 +1222,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@next/font@npm:^14.0.4":
+  version: 14.0.4
+  resolution: "@next/font@npm:14.0.4"
+  peerDependencies:
+    next: "*"
+  checksum: df1d12993754809ed0f1158e9a99f3d22df36c83761b2dff3d974aa9b050b4a7825d67eac55c92089b7aa30c7bc34b1761b17dbb6e78a5860e83062d1497a58e
+  languageName: node
+  linkType: hard
+
 "@next/mdx@npm:^13.3.1":
   version: 13.5.6
   resolution: "@next/mdx@npm:13.5.6"
@@ -2088,6 +2097,7 @@ __metadata:
     "@ethersproject/providers": ^5.7.2
     "@headlessui/react": ^1.7.17
     "@heroicons/react": ^2.0.11
+    "@next/font": ^14.0.4
     "@prisma/client": ^5.6.0
     "@rainbow-me/rainbowkit": 1.1.2
     "@trivago/prettier-plugin-sort-imports": ^4.1.1
