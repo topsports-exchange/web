@@ -4,75 +4,36 @@ import { DeployedEvent } from "@prisma/client";
 import { withStyle } from "baseui";
 import { Button } from "baseui/button";
 import { Card, StyledBody } from "baseui/card";
-import {
-  // StyledHeadCell,
-  StyledBodyCell,
-  StyledTable,
-} from "baseui/table-grid";
+import { StyledBodyCell, StyledTable } from "baseui/table-grid";
+import { getContract } from "viem";
 import { useContractWrite, usePublicClient } from "wagmi";
 import { useAccount } from "wagmi";
-import deployedContractsData from "~~/contracts/deployedContracts";
+import { useDeployedContractInfo, useScaffoldContract } from "~~/hooks/scaffold-eth/";
+import { canClaimAmount, didResolve, isPending, toBetInfo, toWager, youWon } from "~~/hooks/utils";
+import {
+  BetInfo,
+  BetInfoArray,
+  BetStatusProps,
+  EventWinner,
+  Market,
+  Team,
+  Wager,
+  WagerArray,
+} from "~~/interfaces/interfaces";
+// import deployedContractsData from "~~/contracts/deployedContracts";
+import { Contract, ContractName } from "~~/utils/scaffold-eth/contract";
 
-enum EventWinner {
-  UNDEFINED,
-  HOME_TEAM,
-  AWAY_TEAM,
-}
-interface Bet {
-  taker: string;
-  stake: bigint;
-  profit: bigint;
-  winner: EventWinner;
-}
-interface Market {
-  address: string;
-  maker: string;
-  homeTeamOdds: bigint;
-  awayTeamOdds: bigint;
-  limit: bigint;
-  deadline: bigint;
-  bets: Bet[];
-}
-interface Wager {
-  totalWagered: bigint;
-  totalHomePayout: bigint;
-  totalAwayPayout: bigint;
-}
-type WagerArray = readonly [bigint, bigint, bigint];
-interface BetInfo {
-  eventId: bigint;
-  eventContract: string;
-  startdate: bigint;
-  marketId: bigint;
-  betId: bigint;
-}
-type BetInfoArray = readonly [bigint, string, bigint, bigint, bigint];
-
-const eventWinnerString = (winner: EventWinner): string => {
-  switch (winner) {
-    case EventWinner.HOME_TEAM:
-      return "HOME_TEAM";
-    case EventWinner.AWAY_TEAM:
-      return "AWAY_TEAM";
-    case EventWinner.UNDEFINED:
-    default:
-      return "UNDEFINED";
-  }
-};
-
-const toWager = ([totalWagered, totalHomePayout, totalAwayPayout]: WagerArray): Wager => ({
-  totalWagered,
-  totalHomePayout,
-  totalAwayPayout,
-});
-
-const toBetInfo = ([eventId, eventContract, startdate, marketId, betId]: BetInfoArray): BetInfo => ({
-  eventId,
-  eventContract,
-  startdate,
-  marketId,
-  betId,
-});
+// const eventWinnerString = (winner: EventWinner): string => {
+//   switch (winner) {
+//     case EventWinner.HOME_TEAM:
+//       return "HOME_TEAM";
+//     case EventWinner.AWAY_TEAM:
+//       return "AWAY_TEAM";
+//     case EventWinner.UNDEFINED:
+//     default:
+//       return "UNDEFINED";
+//   }
+// };
 
 // function collect(address _to) external returns (uint256 amount) {
 //   // solhint-disable-next-line not-rely-on-time
@@ -96,38 +57,6 @@ const toBetInfo = ([eventId, eventContract, startdate, marketId, betId]: BetInfo
 //   // Uncomment the following line if you want to emit a Claimed event
 //   // emit Claimed(payout);
 // }
-interface BetStatusProps {
-  choice: EventWinner;
-  eventDate: Date;
-  winner: EventWinner;
-  wager: Wager;
-}
-// const t24hours = 3600 * 24 * 1000;
-const t24hours = 3600 * 1 * 1000;
-const wontResolve = (p: BetStatusProps) => {
-  return new Date().valueOf() >= p.eventDate.valueOf() + t24hours && p.winner === EventWinner.UNDEFINED;
-};
-const isPending = (p: BetStatusProps) => {
-  return new Date().valueOf() < p.eventDate.valueOf() + t24hours && p.winner === EventWinner.UNDEFINED;
-};
-const didResolve = (p: BetStatusProps) => {
-  return p.winner !== EventWinner.UNDEFINED;
-};
-const youWon = (p: BetStatusProps) => {
-  return p.winner === p.choice;
-};
-const canClaimAmount = (p: BetStatusProps) => {
-  if (wontResolve(p) && p.wager.totalWagered > 0n) {
-    return p.wager.totalWagered;
-  }
-  if (didResolve(p) && youWon(p)) {
-    if (p.choice === EventWinner.HOME_TEAM) {
-      // or 0n, already claimed
-      return p.choice === EventWinner.HOME_TEAM ? p.wager.totalHomePayout : p.wager.totalAwayPayout;
-    }
-  }
-  return 0n;
-};
 
 const Claim = ({
   eventAddress,
@@ -138,9 +67,10 @@ const Claim = ({
   accountAddress: string;
   claimAmount: bigint;
 }) => {
+  const { data: TopsportsEventCore } = useScaffoldContract({ contractName: "TopsportsEventCore" });
   const { write: claimWrite } = useContractWrite({
     address: eventAddress,
-    abi: deployedContractsData[31337].TopsportsEventCore.abi,
+    abi: TopsportsEventCore?.abi as Contract<"TopsportsEventCore">["abi"],
     functionName: "collect",
     args: [accountAddress],
   });
@@ -150,6 +80,8 @@ const Claim = ({
 const MyBets = () => {
   const publicClient = usePublicClient();
   const account = useAccount();
+  const { data: TopsportsEventFactory } = useScaffoldContract({ contractName: "TopsportsEventFactory" });
+  const { data: deployedContractData } = useDeployedContractInfo("TopsportsEventCore");
   const [bets, setBets] = useState<BetInfo[]>([]);
   const [eventWinner, setEventWinner] = useState<{ [key: string]: number }>({});
   const [eventWager, setEventWager] = useState<{ [address: string]: Wager }>({});
@@ -157,7 +89,7 @@ const MyBets = () => {
   const [eventsDetails, setEventsDetails] = useState<{ [address: string]: DeployedEvent }>({});
 
   useEffect(() => {
-    if (account.address === undefined) {
+    if (account.address === undefined || TopsportsEventFactory === undefined || deployedContractData === undefined) {
       return;
     }
 
@@ -168,46 +100,34 @@ const MyBets = () => {
       for (i = 0n; ; i++) {
         // while (true) {
         try {
-          const result = toBetInfo(
-            await publicClient.readContract({
-              address: deployedContractsData[31337].TopsportsEventFactory.address,
-              abi: deployedContractsData[31337].TopsportsEventFactory.abi,
-              functionName: "betsByAddress",
-              args: [account.address as string, i],
-            }),
-          );
-          newBets.push(result);
-
-          if (!eventsDetails[result.eventContract]) {
-            const response = await fetch("/api/deployedEvent?address=" + result.eventContract);
-            const event = await response.json();
-            setEventsDetails(prev => ({ ...prev, [result.eventContract]: event }));
+          const result = await TopsportsEventFactory.read.betsByAddress([account.address as string, i]);
+          if (!result) {
+            break;
           }
+          const betInfo = toBetInfo(result as BetInfoArray);
+          newBets.push(betInfo);
 
-          if (!allMarkets[result.eventContract]) {
-            const markets = (await publicClient.readContract({
-              // If the event contract is not in allMarkets, fetch all markets for that contract
-              // const markets = await publicClient.readContract({
-              address: result.eventContract,
-              abi: deployedContractsData[31337].TopsportsEventCore.abi,
-              functionName: "getAllMarkets",
-            })) as Market[];
-            setAllMarkets(prev => ({ ...prev, [result.eventContract]: markets }));
+          const TopsportsEventCore = getContract({
+            address: betInfo.eventContract,
+            abi: deployedContractData?.abi as Contract<ContractName>["abi"],
+            publicClient,
+          });
 
-            const winner = await publicClient.readContract({
-              address: result.eventContract,
-              abi: deployedContractsData[31337].TopsportsEventCore.abi,
-              functionName: "winner",
-            });
-            setEventWinner(prev => ({ ...prev, [result.eventContract]: winner }));
+          if (!eventsDetails[betInfo.eventContract]) {
+            const response = await fetch("/api/deployedEvent?address=" + betInfo.eventContract);
+            const event = (await response.json()) as DeployedEvent;
+            setEventsDetails(prev => ({ ...prev, [betInfo.eventContract]: event }));
+          }
+          // If the event contract is not in allMarkets, fetch all markets for that contract
+          if (!allMarkets[betInfo.eventContract]) {
+            const markets = (await TopsportsEventCore.read.getAllMarkets()) as Market[];
+            setAllMarkets(prev => ({ ...prev, [betInfo.eventContract]: markets }));
 
-            const wager: WagerArray = await publicClient.readContract({
-              address: result.eventContract,
-              abi: deployedContractsData[31337].TopsportsEventCore.abi,
-              functionName: "wagerByAddress",
-              args: [account.address as string],
-            });
-            setEventWager(prev => ({ ...prev, [result.eventContract]: toWager(wager) }));
+            const winner = (await TopsportsEventCore.read.winner()) as number;
+            setEventWinner(prev => ({ ...prev, [betInfo.eventContract]: winner })); // XXX race?
+
+            const wager = (await TopsportsEventCore.read.wagerByAddress([account.address as string])) as WagerArray;
+            setEventWager(prev => ({ ...prev, [betInfo.eventContract]: toWager(wager) }));
           }
         } catch (error) {
           // ContractFunctionExecutionError: The contract function "betsByAddress" reverted with the following reason:
@@ -219,70 +139,103 @@ const MyBets = () => {
       setBets(newBets);
     };
     fetchContractEvent();
-  }, [account, allMarkets, publicClient, eventsDetails]);
+  }, [account, allMarkets, eventsDetails, TopsportsEventFactory?.address, deployedContractData?.address]);
+  // });
 
-  const retp = (bet: BetInfo) => {
-    const p: BetStatusProps = {
-      choice: allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].winner,
-      eventDate: new Date(eventsDetails[bet.eventContract].eventDate),
-      winner: eventWinner[bet.eventContract],
-      wager: eventWager[bet.eventContract],
+  const retp = (betInfo: BetInfo) => {
+    try {
+      const p: BetStatusProps = {
+        choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
+        eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
+        winner: eventWinner[betInfo.eventContract],
+        wager: eventWager[betInfo.eventContract],
+      };
+      return p;
+    } catch (error) {
+      console.error("retp", error);
+      debugger;
+    }
+    // const p: BetStatusProps = {
+    //   choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
+    //   eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
+    //   winner: eventWinner[betInfo.eventContract],
+    //   wager: eventWager[betInfo.eventContract],
+    // };
+    // return p;
+    return {
+      choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
+      eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
+      winner: eventWinner[betInfo.eventContract],
+      wager: eventWager[betInfo.eventContract],
     };
-    return p;
   };
-  const betIsPending = (bet: BetInfo) => {
-    return isPending(retp(bet));
+  const betInfoIsPending = (betInfo: BetInfo) => {
+    return isPending(retp(betInfo));
   };
-  const betIsWon = (bet: BetInfo) => {
-    return didResolve(retp(bet)) && youWon(retp(bet));
+  const betInfoIsWon = (betInfo: BetInfo) => {
+    return didResolve(retp(betInfo)) && youWon(retp(betInfo));
   };
-  const betIsHistory = (bet: BetInfo) => {
-    return !betIsPending(bet) && !betIsWon(bet);
+  const betInfoIsHistory = (betInfo: BetInfo) => {
+    return !betInfoIsPending(betInfo) && !betInfoIsWon(betInfo);
   };
 
-  // TODO filter pending vs wins vs history
-  const Bet = ({ bet }: { bet: BetInfo }) => {
-    const p = retp(bet);
-    // debugger;
+  const Bet = ({ betInfo }: { betInfo: BetInfo }) => {
+    // if (eventsDetails) debugger;
+    // console.log("RAAAA", betInfo);
+    const market = allMarkets[betInfo.eventContract][Number(betInfo.marketId)];
+    const bet = market.bets[Number(betInfo.betId)];
+    const p = retp(betInfo);
+    const home = (eventsDetails[betInfo.eventContract].homeTeam as unknown as Team).name;
+    const away = (eventsDetails[betInfo.eventContract].awayTeam as unknown as Team).name;
+    const myTeam = p.choice === EventWinner.HOME_TEAM ? home : away;
+    const odds = bet.winner === EventWinner.HOME_TEAM ? market.homeTeamOdds : market.awayTeamOdds;
+    const profit = bet.profit;
+    const stake = bet.stake;
+    const mult = Number((100n * (stake + profit)) / stake) / 100;
     return (
       <div>
-        <p>
-          {bet.eventId.toString()} {eventsDetails[bet.eventContract].displayName}
-        </p>
-        <p>{new Date(eventsDetails[bet.eventContract].eventDate).toString()}</p>
-        <p>
-          Chose: {eventWinnerString(allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].winner)}
-        </p>
-        <p>eventWinner {eventWinnerString(eventWinner[bet.eventContract])}</p>
+        {/* <p>
+          {betInfo.eventId.toString()} {eventsDetails[betInfo.eventContract].displayName}
+        </p> */}
+        <p>{home}</p>
+        <p>{away}</p>
+        <p>{mult} X</p>
+        {/* <p>{new Date(eventsDetails[betInfo.eventContract].eventDate).toString()}</p>
+        <p>{eventWinnerString(market.bets[Number(betInfo.betId)].winner)} Wins @ +{odds.toString()}</p>
+        <p>eventWinner {eventWinnerString(eventWinner[betInfo.eventContract])}</p>
         <p>
           Days til event:{" "}
-          {(new Date(eventsDetails[bet.eventContract].eventDate).valueOf() - new Date().valueOf()) / (3600 * 24 * 1000)}
+          {(new Date(eventsDetails[betInfo.eventContract].eventDate).valueOf() - new Date().valueOf()) / (3600 * 24 * 1000)}
         </p>
-        <p>Home Odds {allMarkets[bet.eventContract][Number(bet.marketId)].homeTeamOdds.toString()}</p>
-        <p>Away Odds {allMarkets[bet.eventContract][Number(bet.marketId)].awayTeamOdds.toString()}</p>
-        <p>Staked {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].stake.toString()}</p>
-        <p>Profit? {allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)].profit.toString()}</p>
+        <p>Home Odds {market.homeTeamOdds.toString()}</p>
+        <p>Away Odds {market.awayTeamOdds.toString()}</p> */}
+
         <p>
+          {myTeam} Wins @ +{"" + odds}
+        </p>
+        <p>Stake: {market.bets[Number(betInfo.betId)].stake.toString()}</p>
+        <p>Potential Win: {market.bets[Number(betInfo.betId)].profit.toString()}</p>
+        {/* <p>
           wagerByAddress{" "}
-          {JSON.stringify(eventWager[bet.eventContract], (key, value) =>
+          {JSON.stringify(eventWager[betInfo.eventContract], (key, value) =>
             typeof value === "bigint" ? value.toString() : value,
           )}
         </p>
-        <p>canClaimAmount {canClaimAmount(p).toString()}</p>
+        <p>canClaimAmount {canClaimAmount(p).toString()}</p> */}
         {canClaimAmount(p) > 0n && (
           <Claim
-            eventAddress={bet.eventContract}
+            eventAddress={betInfo.eventContract}
             accountAddress={account.address as string}
             claimAmount={canClaimAmount(p)}
           />
         )}
-        DEBUG
-        {JSON.stringify(bet, (key, value) => (typeof value === "bigint" ? value.toString() : value))}
-        {/* {eventcache[bet.eventId.toString()] && JSON.stringify(eventcache[bet.eventId.toString()])} */}
-        {allMarkets[bet.eventContract] &&
-          JSON.stringify(allMarkets[bet.eventContract][Number(bet.marketId)].bets[Number(bet.betId)], (key, value) =>
+        {/* DEBUG */}
+        {/* {JSON.stringify(betInfo, (key, value) => (typeof value === "bigint" ? value.toString() : value))} */}
+        {/* {eventcache[betInfo.eventId.toString()] && JSON.stringify(eventcache[betInfo.eventId.toString()])} */}
+        {/* {allMarkets[betInfo.eventContract] &&
+          JSON.stringify(market.bets[Number(betInfo.betId)], (key, value) =>
             typeof value === "bigint" ? value.toString() : value,
-          )}
+          )} */}
       </div>
     );
   };
@@ -292,15 +245,24 @@ const MyBets = () => {
     margin: "10px",
   });
 
+  if (
+    bets.length === 0 ||
+    Object.keys(allMarkets).length === 0 ||
+    Object.keys(eventsDetails).length === 0 ||
+    Object.keys(eventWinner).length === 0 ||
+    Object.keys(eventWager).length === 0
+  ) {
+    return <p>Loading...</p>;
+  }
   return (
     <div>
       <Card title="My Bets">
         <Card title="Pending">
           <StyledTable role="grid" $gridTemplateColumns="repeat(1,1fr)">
-            {bets.filter(betIsPending).map((bet, index) => (
+            {bets.filter(betInfoIsPending).map((betInfo, index) => (
               <StyledBetBodyCell key={index}>
                 <StyledBody>
-                  <Bet bet={bet} />
+                  <Bet betInfo={betInfo} />
                 </StyledBody>
               </StyledBetBodyCell>
             ))}
@@ -309,10 +271,10 @@ const MyBets = () => {
 
         <Card title="Wins">
           <StyledTable role="grid" $gridTemplateColumns="repeat(1,1fr)">
-            {bets.filter(betIsWon).map((bet, index) => (
+            {bets.filter(betInfoIsWon).map((betInfo, index) => (
               <StyledBetBodyCell key={index}>
                 <StyledBody>
-                  <Bet bet={bet} />
+                  <Bet betInfo={betInfo} />
                 </StyledBody>
               </StyledBetBodyCell>
             ))}
@@ -321,10 +283,10 @@ const MyBets = () => {
 
         <Card title="History">
           <StyledTable role="grid" $gridTemplateColumns="repeat(1,1fr)">
-            {bets.filter(betIsHistory).map((bet, index) => (
+            {bets.filter(betInfoIsHistory).map((betInfo, index) => (
               <StyledBetBodyCell key={index}>
                 <StyledBody>
-                  <Bet bet={bet} />
+                  <Bet betInfo={betInfo} />
                 </StyledBody>
               </StyledBetBodyCell>
             ))}
@@ -335,4 +297,4 @@ const MyBets = () => {
   );
 };
 
-export default MyBets;
+export { MyBets };

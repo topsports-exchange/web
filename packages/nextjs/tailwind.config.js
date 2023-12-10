@@ -81,6 +81,14 @@ module.exports = {
       animation: {
         "pulse-fast": "pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
+      fontFamily: {
+        // "Exo 2": ["Exo 2", "sans-serif"],
+        Sportypo: ["var(--font-sportypo)", "sans-serif"],
+        "Exo 2": ["var(--font-exo_2)"],
+        sportypo: ["var(--font-sportypo)"],
+
+        sans: ["var(--font-exo_2)", "sans-serif"],
+      },
     },
   },
 };

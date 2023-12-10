@@ -21,10 +21,11 @@ const deployMockEuroe: DeployFunction = async function (hre: HardhatRuntimeEnvir
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  await deploy("MockEuroe", {
+  await deploy("USDCoin", {
+    // await deploy("MockEuroe", {
     from: deployer,
     // Contract constructor arguments
-    args: [deployer],
+    // args: [deployer],
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
     // automatically mining the contract deployment transaction. There is no effect on live networks.
@@ -33,6 +34,7 @@ const deployMockEuroe: DeployFunction = async function (hre: HardhatRuntimeEnvir
 
   // Get the deployed contract
   // const MockEuroe = await hre.ethers.getContract("MockEuroe", deployer);
+  // await MockEuroe.mint(deployer, 123456000000);
 };
 
 export default deployMockEuroe;

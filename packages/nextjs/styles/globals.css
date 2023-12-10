@@ -1,7 +1,21 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
-
+@font-face {
+  font-family: 'Exo 2';
+  src: url('/fonts/Exo_2/Exo2-Italic-VariableFont_wght.ttf') format('ttf'),
+       url('/fonts/Exo_2/Exo2-VariableFont_wght.ttf') format('ttf');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sportypo';
+  src: url('/fonts/Sportypo/Sportypo-Reguler-Demo.ttf') format('ttf');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 :root,
 [data-theme] {
   background: hsl(var(--b2));

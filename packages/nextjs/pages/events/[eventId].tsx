@@ -1,88 +1,37 @@
 // pages/events/[eventId].tsx
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { DeployedEvent, MakerSignature, PrismaClient } from "@prisma/client";
-import { Button, KIND as ButtonKind } from "baseui/button";
-import { Card, StyledBody } from "baseui/card";
-import { Modal, ModalBody, ModalButton, ModalFooter, ModalHeader, ROLE, SIZE } from "baseui/modal";
-import {
-  // StyledHeadCell,
-  StyledBodyCell,
-  StyledTable,
-} from "baseui/table-grid";
+import { MakerSignature, PrismaClient } from "@prisma/client";
+import { Button } from "baseui/button";
+// import {
+//   // StyledHeadCell,
+//   StyledBodyCell,
+//   StyledTable,
+// } from "baseui/table-grid";
 import { ethers } from "ethers";
 import { GetServerSideProps } from "next";
-import { usePublicClient } from "wagmi";
-import { erc20ABI } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { useContractWrite } from "wagmi";
+import Layout from "~~/components/Layout";
+import { MetaHeader } from "~~/components/MetaHeader";
+import OpenMarketCard from "~~/components/OpenMarketCard";
+import { BetInterface, PlaceBetPopup } from "~~/components/PlaceBet";
+import { Address } from "~~/components/scaffold-eth/Address";
 import deployedContractsData from "~~/contracts/deployedContracts";
+import {
+  Competitor,
+  EventDisplayDetails,
+  EventPageProps,
+  EventWinner,
+  MakerSignatureNormalized,
+  Team,
+  Venue,
+} from "~~/interfaces/interfaces";
+import { useGlobalState } from "~~/services/store/store";
 
 // import { useStyletron } from 'baseui';
 
 const prisma = new PrismaClient();
-
-interface MakerSignatureNormalized extends Omit<MakerSignature, "eventDate" | "deadlineNormalized"> {
-  deadlineNormalized: string;
-  eventDate: string;
-}
-interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "startdate"> {
-  eventDate: Date | string;
-  startdate: Date | string;
-}
-
-interface Venue {
-  name: string;
-  city: string;
-}
-interface Team {
-  name: string;
-  id: string;
-  homeAway: string;
-  logo: string;
-  moneylines: number[];
-}
-
-// o/r eventDate, deadline
-interface EventPageProps {
-  event: DeployedEventNormalized | null;
-  makerSignatures: MakerSignatureNormalized[] | null;
-}
-
-interface TakeSigProps {
-  event: DeployedEventNormalized;
-  tokenAddress: `0x${string}`;
-  makerSignature: MakerSignatureNormalized;
-}
-
-interface Competitor {
-  homeAway: string;
-  team: {
-    name: string;
-  };
-}
-
-interface EventDisplayDetails {
-  name: string;
-  shortName: string;
-  fullName: string;
-  venue: {
-    fullName: string | undefined;
-    city: string | undefined;
-  };
-  homeTeamName: string | undefined;
-  awayTeamName: string | undefined;
-  status: {
-    name: string | undefined;
-    completed: boolean | undefined;
-    period: number | undefined;
-  };
-}
-
-enum EventWinner {
-  UNDEFINED,
-  HOME_TEAM,
-  AWAY_TEAM,
-}
 
 const HackWin = (props: any) => {
   const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
@@ -104,6 +53,7 @@ const HackWin = (props: any) => {
   return <Button onClick={() => write()}>Hack Winner</Button>;
 };
 
+/*
 const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
   const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
   const {
@@ -162,17 +112,20 @@ const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
     </Modal>
   );
 };
-
+*/
 const EventPage = ({ event, makerSignatures }: EventPageProps) => {
+  const account = useAccount();
   const router = useRouter();
   const publicClient = usePublicClient();
   const { eventId } = router.query;
+  const { setPlaceBetModalData, setPlaceBetModalOpen } = useGlobalState();
   const [contractEventId, setContractEventId] = useState<string | null>(null);
   const [tokenAddress, setTokenAddress] = useState<`0x${string}` | null>(null);
-  const [markets, setMarkets] = useState<any[]>([]);
+  // const [markets, setMarkets] = useState<any[]>([]);
   const [makerSignatureId, setMakerSignatureId] = useState<number | null>(null);
   const [winner, setWinner] = useState(EventWinner.UNDEFINED);
   const [eventDisplayDetails, setEventDisplayDetails] = useState<EventDisplayDetails | null>(null);
+  const useMarkets = false;
 
   useEffect(() => {
     if (!event) {
@@ -232,7 +185,10 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
           return result;
         };
 
-        setMarkets((await readEventContract("getAllMarkets")) as any[]);
+        if (useMarkets) {
+          // setMarkets((await readEventContract("getAllMarkets")) as any[]); // TODO match sigs
+        }
+
         setTokenAddress((await readEventContract("token")) as `0x${string}`);
         setWinner((await readEventContract("winner")) as EventWinner);
         setContractEventId((await readEventContract("eventId")).toString());
@@ -242,130 +198,164 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
     };
     fetchDataFromApi();
     fetchContractEvent();
-  }, [eventId, event, publicClient]);
+  }, [eventId, event, publicClient, useMarkets]);
 
   if (!event || !eventDisplayDetails || !contractEventId) {
-    return <div>Event not found</div>;
+    return <div>Event loading...</div>;
   }
 
-  const DATA = [
-    ["Name", eventDisplayDetails.name],
-    ["Token", tokenAddress],
-    ["Name", event.displayName],
-    ["Short Name", eventDisplayDetails.shortName],
-    ["Full Name", eventDisplayDetails.fullName],
-    // ["Venue", `${eventDisplayDetails.venue.fullName}, ${eventDisplayDetails.venue.city}`],
-    ["Venue", (event.venue as unknown as Venue).name],
-    ["Home Team", (event.homeTeam as unknown as Team).name],
-    ["Away Team", (event.awayTeam as unknown as Team).name],
-    ["Home Team", eventDisplayDetails.homeTeamName],
-    ["Away Team", eventDisplayDetails.awayTeamName],
-    ["Status Name", eventDisplayDetails.status.name],
-    ["Status Completed", eventDisplayDetails.status.completed ? "Yes" : "No"],
-    ["Status Period", eventDisplayDetails.status?.period?.toString()],
-    ["Winner", winner === EventWinner.HOME_TEAM ? eventDisplayDetails.homeTeamName : eventDisplayDetails.awayTeamName],
-  ];
+  // const DATA = [
+  //   ["Name", eventDisplayDetails.name],
+  //   ["Token", tokenAddress],
+  //   ["Name", event.displayName],
+  //   ["Short Name", eventDisplayDetails.shortName],
+  //   ["Full Name", eventDisplayDetails.fullName],
+  //   // ["Venue", `${eventDisplayDetails.venue.fullName}, ${eventDisplayDetails.venue.city}`],
+  //   ["Venue", (event.venue as unknown as Venue).name],
+  //   ["Home Team", (event.homeTeam as unknown as Team).name],
+  //   ["Away Team", (event.awayTeam as unknown as Team).name],
+  //   ["Home Team", eventDisplayDetails.homeTeamName],
+  //   ["Away Team", eventDisplayDetails.awayTeamName],
+  //   ["Status Name", eventDisplayDetails.status.name],
+  //   ["Status Completed", eventDisplayDetails.status.completed ? "Yes" : "No"],
+  //   ["Status Period", eventDisplayDetails.status?.period?.toString()],
+  //   ["Winner", winner === EventWinner.HOME_TEAM ? eventDisplayDetails.homeTeamName : eventDisplayDetails.awayTeamName],
+  // ];
 
   return (
-    <div>
-      <Card
-        title="Event Details"
-        overrides={{ Root: { style: { width: "328px", float: "left", margin: "20px" } } }}
-        // headerImage={
-        //   'https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/chi.png'
-        // }
-      >
-        <StyledBody>
-          <p>
-            Event ID from URL / Contract: {eventId} / {contractEventId}
-          </p>
-          <StyledTable role="grid" $gridTemplateColumns="repeat(2,1fr)">
-            {DATA.map((row, rowIndex) => (
-              <div key={rowIndex} role="row" style={{ display: "contents" }}>
-                {row.map((cell, cellIndex) => (
-                  <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                ))}
+    <>
+      <MetaHeader />
+      <Layout>
+        <div className="grid grid-cols-2 gap-4 bg-black">
+          <div className="bg-black p-4 mb-4">
+            <div className="flex justify-center items-center space-x-8">
+              <div className="text-center">
+                <img src={(event.homeTeam as unknown as Team).logo} alt="" className="w-24 h-24 object-contain" />
+                <p className="text-white mt-2">{(event.homeTeam as unknown as Team).name}</p>
+              </div>
+              <div className="text-6xl font-bold text-white">X</div>
+              <div className="text-center">
+                <img src={(event.awayTeam as unknown as Team).logo} alt="" className="w-24 h-24 object-contain" />
+                <p className="text-white mt-2">{(event.awayTeam as unknown as Team).name}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-black p-4">
+            <div className="flex justify-between items-center">
+              <div className="text-lg text-white">
+                <p>Kick off</p>
+                <p>Venue</p>
+                <p>Competition</p>
+                <p>Smart Contract</p>
+              </div>
+              <div className="text-lg font-bold text-white">
+                <p>{new Date(event.eventDate).toLocaleString("en-US")}</p>
+                <p>{(event.venue as unknown as Venue).name}</p>
+                <p>NFL, Week X</p>
+                <div>
+                  <Address address={event.address} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {winner === EventWinner.UNDEFINED ? <HackWin event={event} /> : "Winner already set"}
+
+        <div className="grid grid-cols-2 gap-4">
+          {makerSignatures
+            ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
+            // ?.map(m => {
+            //   // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
+            //   return [
+            //     "Use",
+            //     eventDisplayDetails.homeTeamName,
+            //     eventDisplayDetails.awayTeamName,
+            //     "Limit",
+            //     "Deadline",
+            //     <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
+            //       Get in &gt;&gt;
+            //     </Button>,
+            //     m.homeTeamOdds,
+            //     m.awayTeamOdds,
+            //     m.limit,
+            //     new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+            //   ];
+            // })
+            .map((row, rowIndex) => (
+              <div className="w-100" key={rowIndex}>
+                <OpenMarketCard
+                  // className={rowIndex % 2 === 0 ? "row-start-1" : "row-start-2"}
+                  team1={event.homeTeam}
+                  team2={event.awayTeam}
+                  activeAmount={null}
+                  totalAmount={row.limit}
+                  setSelectedMatch={() => {
+                    setPlaceBetModalData(event as BetInterface);
+                    setPlaceBetModalOpen(true);
+                    setMakerSignatureId(makerSignatures[rowIndex].id);
+                  }}
+                />
               </div>
             ))}
-          </StyledTable>
-          <HackWin event={event} />
-        </StyledBody>
-      </Card>
+        </div>
+        {makerSignatureId && tokenAddress && account && (
+          <PlaceBetPopup
+            accountAddress={account.address as string}
+            event={event}
+            tokenAddress={tokenAddress ?? "0x000000000000000000"}
+            makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
+          />
+        )}
+        {/* {makerSignatureId && tokenAddress && (
+              <TakeSig
+                event={event}
+                tokenAddress={tokenAddress}
+                makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
+              />
+            )} */}
 
-      {makerSignatures
-        ?.map(m => {
-          // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
-          return [
-            "Use",
-            "Home odds",
-            "Away odds",
-            "Limit",
-            "Deadline",
-            <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
-              Use this makerSignature
-            </Button>,
-            m.homeTeamOdds,
-            m.awayTeamOdds,
-            m.limit,
-            new Date(1000 * parseInt(m.deadline)).toLocaleString(),
-          ];
-        })
-        .map((row, rowIndex) => (
-          <Card
-            key={rowIndex}
-            title={"Market #" + makerSignatures[rowIndex].id}
-            overrides={{ Root: { style: { display: "contents" } } }}
-          >
-            <StyledBody>
-              <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
-                {row.map((cell, cellIndex) => (
-                  <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                ))}
-              </StyledTable>
-            </StyledBody>
-          </Card>
-        ))}
-
-      {makerSignatureId && tokenAddress && (
-        <TakeSig
-          event={event}
-          tokenAddress={tokenAddress}
-          makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
-        />
-      )}
-
-      {markets
-        ?.map(m => {
-          // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
-          return [
-            "Maker",
-            "Home odds",
-            "Away odds",
-            "Limit",
-            "Deadline",
-            "Bets",
-            m.maker,
-            m.homeTeamOdds.toString(),
-            m.awayTeamOdds.toString(),
-            m.limit.toString(),
-            new Date(1000 * parseInt(m.deadline)).toLocaleString(),
-            <Button key={m.id} onClick={() => console.log("this bets:", m.bets)}>
-              Log {m.bets.length}
-            </Button>,
-          ];
-        })
-        .map((row, rowIndex) => (
-          <Card key={rowIndex} title={"Open Market"} overrides={{ Root: { style: { display: "contents" } } }}>
-            <StyledBody>
-              <StyledTable role="grid" $gridTemplateColumns="repeat(6,1fr)">
-                {row.map((cell, cellIndex) => (
-                  <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
-                ))}
-              </StyledTable>
-            </StyledBody>
-          </Card>
-        ))}
-    </div>
+        {/* {useMarkets &&
+              markets
+                ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
+                ?.map(m => {
+                  // const [maker, homeTeamOdds, awayTeamOdds, limit, deadline, bets] = m;
+                  return [
+                    "Maker",
+                    eventDisplayDetails.homeTeamName,
+                    eventDisplayDetails.awayTeamName,
+                    "Limit",
+                    "Deadline",
+                    "Bets",
+                    m.maker,
+                    m.homeTeamOdds.toString(),
+                    m.awayTeamOdds.toString(),
+                    m.limit.toString(),
+                    new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+                    <Button key={m.id} onClick={() => console.log("this bets:", m.bets)}>
+                      Log {m.bets.length}
+                    </Button>,
+                  ];
+                })
+                .map((row, rowIndex) => (
+                  <Card key={rowIndex} title={"Open Market"} overrides={{ Root: { style: { display: "contents" } } }}>
+                    <StyledBody>
+                      <StyledTable role="grid" $gridTemplateColumns="repeat(6,1fr)">
+                        {row.map((cell, cellIndex) => (
+                          <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
+                        ))}
+                      </StyledTable>
+                    </StyledBody>
+                  </Card>
+                ))} */}
+        {/* </div> */}
+        {/* <div className="col-span-1">
+            <MyBetsTabs />
+          </div> */}
+        {/* </div> */}
+      </Layout>
+    </>
   );
 };
 
@@ -385,15 +375,15 @@ export const getServerSideProps: GetServerSideProps<EventPageProps> = async ({ p
         where: { eventId },
       });
     } else {
-      // event = {
-      //   id: 5,
-      //   eventId: "401548411",
-      //   displayName: "Tennessee Titans at Chicago Bears",
-      //   eventDate: new Date("2023-08-12T00:00:00.000Z"),
-      //   startdate: new Date("2023-08-12T00:00:00.000Z"),
-      //   address: "0xE7Ab431d056AFFd38Cd550bcef0A2cd2e321CDab",
-      //   salt: "0x60a3e3b95c2c75ebb620be1cdc097834bf6e77468047c9888bfb8e2b311e2d86",
-      // };
+      event = {
+        id: 5,
+        eventId: "401547578",
+        displayName: "Tennessee Titans at Chicago Bears",
+        eventDate: new Date(1701998100),
+        startdate: new Date(1701998100),
+        address: "0x55406DBa126cc1520b4C90b0B060EBE776d504A7",
+        salt: "0x73e416ffdd363cd831fe2466b39d14c9ef9aa131f773290b879da674895cee0c",
+      };
     }
     // console.log("event:", event);
 
