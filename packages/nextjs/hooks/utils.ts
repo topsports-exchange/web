@@ -6,7 +6,7 @@ export const wontResolve = (p: BetStatusProps) => {
   return new Date().valueOf() >= p.eventDate.valueOf() + t24hours && p.winner === EventWinner.UNDEFINED;
 };
 export const isPending = (p: BetStatusProps) => {
-  return new Date().valueOf() < p.eventDate.valueOf() + t24hours && p.winner === EventWinner.UNDEFINED;
+  return p.winner === EventWinner.UNDEFINED;
 };
 export const didResolve = (p: BetStatusProps) => {
   return p.winner !== EventWinner.UNDEFINED;
