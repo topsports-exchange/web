@@ -63,7 +63,7 @@ export const MyBetsTabs = () => {
           <MyBetsNotLogged />
         )}
       </div>
-      <PlaceBetPopup betData={betDataMock} />
+      <PlaceBetPopup />
     </>
   );
 };

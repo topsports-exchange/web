@@ -12,9 +12,9 @@ export default function Layout({ children }: LayoutProps) {
     <div className="flex min-h-full flex-col">
       {/* <Header /> */}
       <div className="mx-auto flex w-full ">
-        <aside className="sticky top-8 hidden flex-1 shrink-0 lg:block">
+        {/* <aside className="sticky top-8 hidden flex-1 shrink-0 lg:block">
           <Menu />
-        </aside>
+        </aside> */}
 
         <main className="flex-1 max-w-7xl items-start gap-x-8 px-4 py-10 sm:px-6 lg:px-8">{children}</main>
 

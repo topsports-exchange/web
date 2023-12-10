@@ -1,43 +1,52 @@
 import React, { useState } from "react";
 import Popup from "./Popup";
+import { JsonObject, JsonValue } from "@prisma/client/runtime/library";
+import { DeployedEventNormalized } from "~~/interfaces/interfaces";
+import { useGlobalState } from "~~/services/store/store";
 
 interface Team {
   logo: string;
   name: string;
 }
 
-export interface BetInterface {
-  teams: Team[];
-  odds: number;
-  winMultiplier: number;
-  maxBetAmount: number;
-  maker: string;
-  marketSmartContractAddress: string;
+export interface EventTeam extends Team, JsonObject {
+  moneylines: number[];
 }
-export const PlaceBetPopup = ({ betData }: { betData: BetInterface }) => {
-  const [isPopupOpen, setPopupOpen] = useState(true);
+export interface BetInterface extends DeployedEventNormalized {
+  homeTeam: EventTeam;
+  awayTeam: EventTeam;
+}
+export const PlaceBetPopup = () => {
+  // const [isPopupOpen, setPopupOpen] = useState(true);
+  const { isPlaceBetModalOpen, placeBetModalData, setPlaceBetModalOpen } = useGlobalState();
 
-  const closePopup = () => setPopupOpen(false);
+  const closePopup = () => setPlaceBetModalOpen(false);
   return (
-    <Popup isOpen={isPopupOpen} onClose={closePopup}>
-      <PlaceBet betData={betData} />
+    <Popup isOpen={isPlaceBetModalOpen} onClose={closePopup}>
+      {placeBetModalData && <PlaceBet betData={placeBetModalData} />}
     </Popup>
   );
 };
 const PlaceBet: React.FC<{ betData: BetInterface }> = ({ betData }) => {
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  console.log("PLACE BET DATA", betData);
+  const [selectedTeam, setSelectedTeam] = useState<EventTeam | null>(null);
   const [betAmount, setBetAmount] = useState<number>(0);
 
-  const calculatePotentialWin = (amount: number, multiplier: number): number => {
-    return amount * multiplier;
+  const calculatePotentialWin = (amount: number, odds: number[]): number => {
+    if (!selectedTeam || odds.length === 0) return 0;
+    const averageOdds = odds.reduce((acc, value) => acc + value, 0) / odds.length;
+    const potentialWIn = amount * (averageOdds > 0 ? averageOdds / 100 + 1 : -100 / averageOdds + 1);
+    return parseFloat(potentialWIn.toFixed(2));
   };
 
-  const handleTeamSelect = (team: Team) => {
+  const handleTeamSelect = (team: EventTeam) => {
     setSelectedTeam(team);
   };
 
   const handleBetAmountChange = (amount: number) => {
-    if (amount <= betData.maxBetAmount) {
+    // Assuming maxBetAmount is the maximum value in the moneylines array
+    const maxBetAmount = Math.max(...betData.homeTeam?.moneylines, ...betData.awayTeam.moneylines);
+    if (amount <= maxBetAmount) {
       setBetAmount(amount);
     }
   };
@@ -45,9 +54,9 @@ const PlaceBet: React.FC<{ betData: BetInterface }> = ({ betData }) => {
   return (
     <div className="bg-neutral-900 text-white p-4 rounded-lg">
       <div className="flex justify-between mb-4">
-        {betData.teams.map(team => (
+        {[betData.homeTeam, betData.awayTeam].map(team => (
           <button
-            key={team.name}
+            key={team.id}
             className={`flex items-center px-4 py-2 rounded-full text-sm font-medium border-2 ${
               selectedTeam?.name === team.name
                 ? "border-green-500 bg-green-500 text-white"
@@ -56,18 +65,17 @@ const PlaceBet: React.FC<{ betData: BetInterface }> = ({ betData }) => {
             onClick={() => handleTeamSelect(team)}
           >
             <img src={team.logo} alt={team.name} className="w-6 h-6 mr-2" />
-            {team.name}
+            {team.name?.toString()}
           </button>
         ))}
       </div>
       <div className="mb-4">
         <div className="text-lg font-semibold">{selectedTeam ? `${selectedTeam.name} Wins` : "Select a team"}</div>
         <div className={`text-lg font-semibold ${selectedTeam ? "text-emerald-400" : "text-gray-400"}`}>
-          {selectedTeam ? `+${betData.odds}` : "Odds"}
+          {selectedTeam ? `${selectedTeam.moneylines[0] > 0 ? "+" : ""}${selectedTeam.moneylines[0]}` : "Odds"}
         </div>
-        <div className="text-lg font-semibold">{selectedTeam ? `${betData.winMultiplier}x` : "Multiplier"}</div>
         <div className="text-lg font-semibold">
-          Potential win: ${selectedTeam ? calculatePotentialWin(betAmount, betData.winMultiplier) : "0"}
+          Potential win: ${calculatePotentialWin(betAmount, selectedTeam ? selectedTeam.moneylines : [])}
         </div>
       </div>
       <div className="mb-4">
@@ -90,8 +98,14 @@ const PlaceBet: React.FC<{ betData: BetInterface }> = ({ betData }) => {
             </button>
           ))}
           <button
-            onClick={() => handleBetAmountChange(betData.maxBetAmount)}
-            className={`px-4 py-2 rounded-md ${betAmount === betData.maxBetAmount ? "bg-green-600" : "bg-green-500"}`}
+            onClick={() =>
+              handleBetAmountChange(Math.max(...betData.homeTeam.moneylines, ...betData.awayTeam.moneylines))
+            }
+            className={`px-4 py-2 rounded-md ${
+              betAmount === Math.max(...betData.homeTeam.moneylines, ...betData.awayTeam.moneylines)
+                ? "bg-green-600"
+                : "bg-green-500"
+            }`}
           >
             MAX
           </button>
@@ -102,11 +116,11 @@ const PlaceBet: React.FC<{ betData: BetInterface }> = ({ betData }) => {
       </button>
       <div className="flex justify-between items-center mt-4">
         <div className="text-sm">Maker</div>
-        <div className="text-sm">{betData.maker}</div>
+        <div className="text-sm">{betData.address}</div>
       </div>
       <div className="flex justify-between items-center">
         <div className="text-sm">Market Smart Contract</div>
-        <div className="text-sm">{betData.marketSmartContractAddress}</div>
+        <div className="text-sm">{betData.salt}</div>
       </div>
     </div>
   );
