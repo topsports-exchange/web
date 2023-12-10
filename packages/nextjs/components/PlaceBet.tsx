@@ -27,6 +27,7 @@ export const PlaceBetPopup = ({ accountAddress, event, tokenAddress, makerSignat
   // const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
   const { data: TopsportsEventCore } = useDeployedContractInfo("TopsportsEventCore");
   const [betAmount, setBetAmount] = useState<number>(0);
+  const [selectedTeam, setSelectedTeam] = useState<EventTeam | null>(null);
 
   const { data: allowance } = useContractRead({
     address: tokenAddress,
@@ -47,7 +48,8 @@ export const PlaceBetPopup = ({ accountAddress, event, tokenAddress, makerSignat
     // TopsportsEventCore.placeBet(100, EventWinner.HOME_TEAM, 100, -200, sigData.limit, sigData.deadline, contractAddr, signature);
     args: [
       parseUnits(betAmount.toString(), DECIMALS), // amount bet
-      EventWinner.HOME_TEAM,
+      placeBetModalData?.homeTeam.name === selectedTeam?.name ? EventWinner.HOME_TEAM : EventWinner.AWAY_TEAM,
+      // EventWinner.HOME_TEAM,
       BigInt(makerSignature.homeTeamOdds),
       BigInt(makerSignature.awayTeamOdds),
       BigInt(makerSignature.limit),
@@ -68,6 +70,8 @@ export const PlaceBetPopup = ({ accountAddress, event, tokenAddress, makerSignat
           betAmount={betAmount}
           setBetAmount={setBetAmount}
           allowance={allowance || 0n}
+          selectedTeam={selectedTeam}
+          setSelectedTeam={setSelectedTeam}
         />
       )}
     </Popup>
@@ -80,10 +84,12 @@ const PlaceBet: React.FC<{
   betAmount: number;
   setBetAmount: any;
   allowance: bigint;
+  selectedTeam: EventTeam | null;
+  setSelectedTeam: any;
 }> = args => {
-  const { betData, approveWrite, placeBetWrite, betAmount, setBetAmount, allowance } = args;
+  const { betData, approveWrite, placeBetWrite, betAmount, setBetAmount, allowance, selectedTeam, setSelectedTeam } =
+    args;
   console.log("PLACE BET DATA", betData);
-  const [selectedTeam, setSelectedTeam] = useState<EventTeam | null>(null);
 
   const calculatePotentialWin = (amount: number, odds: number[]): number => {
     if (!selectedTeam || odds.length === 0) return 0;
