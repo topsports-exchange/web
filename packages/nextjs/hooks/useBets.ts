@@ -18,48 +18,48 @@ import {
 function useBets() {
   const publicClient = usePublicClient();
   const account = useAccount();
-  const { data: TopsportsEventFactory } = useScaffoldContract({ contractName: "TopsportsEventFactory" });
+  const { data: TopsportsEventFactory, isLoading: TopsportsEventFactoryisLoading } = useScaffoldContract({
+    contractName: "TopsportsEventFactory",
+  });
   const { data: deployedContractData } = useDeployedContractInfo("TopsportsEventCore");
   const [bets, setBets] = useState<BetInfo[]>([]);
+  const [betsLoaded, setBetsLoaded] = useState(false);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
   const [eventWinner, setEventWinner] = useState<{ [key: string]: number }>({});
   const [eventWager, setEventWager] = useState<{ [address: string]: Wager }>({});
   const [allMarkets, setAllMarkets] = useState<{ [address: string]: Market[] }>({});
   const [eventsDetails, setEventsDetails] = useState<{ [address: string]: DeployedEvent }>({});
 
-  const retp = useCallback(
-    (betInfo: BetInfo) => {
-      try {
-        const p: BetStatusProps = {
-          choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
-          eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
-          winner: eventWinner[betInfo.eventContract],
-          wager: eventWager[betInfo.eventContract],
-        };
-        return p;
-      } catch (error) {
-        console.error("retp", error);
-        debugger;
-      }
-      // const p: BetStatusProps = {
-      //   choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
-      //   eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
-      //   winner: eventWinner[betInfo.eventContract],
-      //   wager: eventWager[betInfo.eventContract],
-      // };
-      // return p;
-      return {
+  const retp = (betInfo: BetInfo) => {
+    try {
+      const p: BetStatusProps = {
         choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
         eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
         winner: eventWinner[betInfo.eventContract],
         wager: eventWager[betInfo.eventContract],
       };
-    },
-    [allMarkets, eventsDetails, eventWinner, eventWager],
-  );
+      return p;
+    } catch (error) {
+      console.error("retp", error);
+      debugger;
+    }
+    // const p: BetStatusProps = {
+    //   choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
+    //   eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
+    //   winner: eventWinner[betInfo.eventContract],
+    //   wager: eventWager[betInfo.eventContract],
+    // };
+    // return p;
+    return {
+      choice: allMarkets[betInfo.eventContract][Number(betInfo.marketId)].bets[Number(betInfo.betId)].winner,
+      eventDate: new Date(eventsDetails[betInfo.eventContract].eventDate),
+      winner: eventWinner[betInfo.eventContract],
+      wager: eventWager[betInfo.eventContract],
+    };
+  };
 
   const getBetWithEvent = useCallback(
     ({ betInfo }: { betInfo: BetInfo }) => {
-      // if (eventsDetails) debugger;
       if (!eventsDetails || !allMarkets[betInfo.eventContract] || isNaN(+betInfo?.marketId.toString())) return;
       const market = allMarkets[betInfo.eventContract][Number(betInfo.marketId)];
       const bet = market.bets[Number(betInfo.betId)];
@@ -89,7 +89,7 @@ function useBets() {
   );
 
   useEffect(() => {
-    if (account.address === undefined || TopsportsEventFactory === undefined || deployedContractData === undefined) {
+    if (account.address === undefined || TopsportsEventFactory === undefined) {
       return;
     }
     const fetchContractEvent = async () => {
@@ -105,29 +105,6 @@ function useBets() {
           }
           const betInfo = toBetInfo(result as BetInfoArray);
           newBets.push(betInfo);
-
-          const TopsportsEventCore = getContract({
-            address: betInfo.eventContract,
-            abi: deployedContractData.abi,
-            publicClient,
-          });
-
-          if (!eventsDetails[betInfo.eventContract]) {
-            const response = await fetch("/api/deployedEvent?address=" + betInfo.eventContract);
-            const event = (await response.json()) as DeployedEvent;
-            setEventsDetails(prev => ({ ...prev, [betInfo.eventContract]: event }));
-          }
-          // If the event contract is not in allMarkets, fetch all markets for that contract
-          if (!allMarkets[betInfo.eventContract]) {
-            const markets = (await TopsportsEventCore.read.getAllMarkets()) as Market[];
-            setAllMarkets(prev => ({ ...prev, [betInfo.eventContract]: markets }));
-
-            const winner = (await TopsportsEventCore.read.winner()) as number;
-            setEventWinner(prev => ({ ...prev, [betInfo.eventContract]: winner })); // XXX race?
-
-            const wager = (await TopsportsEventCore.read.wagerByAddress([account.address as string])) as WagerArray;
-            setEventWager(prev => ({ ...prev, [betInfo.eventContract]: toWager(wager) }));
-          }
         } catch (error) {
           // ContractFunctionExecutionError: The contract function "betsByAddress" reverted with the following reason:
           // Error: Transaction reverted without a reason string
@@ -136,18 +113,46 @@ function useBets() {
         }
       }
       setBets(newBets);
+      setBetsLoaded(true);
     };
     fetchContractEvent();
-    // }, [account, allMarkets, publicClient, eventsDetails, TopsportsEventFactory, deployedContractData]);
-  }, [
-    publicClient,
-    account.address,
-    account.isConnected,
-    allMarkets,
-    eventsDetails,
-    TopsportsEventFactory,
-    deployedContractData,
-  ]);
+  }, [account.address, TopsportsEventFactoryisLoading]);
+
+  useEffect(() => {
+    if (betsLoaded === false || deployedContractData === undefined) {
+      return;
+    }
+    const fetchContractEvent = async () => {
+      for (let i = 0; i < bets.length; i++) {
+        const betInfo = bets[i];
+
+        const TopsportsEventCore = getContract({
+          address: betInfo.eventContract,
+          abi: deployedContractData.abi,
+          publicClient,
+        });
+
+        if (!eventsDetails[betInfo.eventContract]) {
+          const response = await fetch("/api/deployedEvent?address=" + betInfo.eventContract);
+          const event = (await response.json()) as DeployedEvent;
+          setEventsDetails(prev => ({ ...prev, [betInfo.eventContract]: event }));
+        }
+        // If the event contract is not in allMarkets, fetch all markets for that contract
+        if (!allMarkets[betInfo.eventContract]) {
+          const markets = (await TopsportsEventCore.read.getAllMarkets()) as Market[];
+          setAllMarkets(prev => ({ ...prev, [betInfo.eventContract]: markets }));
+
+          const winner = (await TopsportsEventCore.read.winner()) as number;
+          setEventWinner(prev => ({ ...prev, [betInfo.eventContract]: winner })); // XXX race?
+
+          const wager = (await TopsportsEventCore.read.wagerByAddress([account.address as string])) as WagerArray;
+          setEventWager(prev => ({ ...prev, [betInfo.eventContract]: toWager(wager) }));
+        }
+      }
+      setEventsLoaded(true);
+    };
+    fetchContractEvent();
+  }, [betsLoaded, deployedContractData]);
 
   const betInfoIsPending = (betInfo: BetInfo) => {
     return isPending(retp(betInfo));
@@ -160,6 +165,8 @@ function useBets() {
   };
 
   return {
+    betsLoaded,
+    eventsLoaded,
     bets,
     allMarkets,
     eventsDetails,
