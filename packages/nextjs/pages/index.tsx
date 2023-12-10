@@ -1,13 +1,16 @@
-import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 import type { NextPage } from "next";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import Layout from "~~/components/Layout";
-import { MetaHeader } from "~~/components/MetaHeader";
 
 const Home: NextPage = () => {
+  const router = useRouter();
+  useEffect(() => {
+    router.push("/events/week/14");
+  }, []);
   return (
     <>
-      <MetaHeader />
+      <div className="flex items-center justify-center h-screen">Loading...</div>
+      {/* <MetaHeader /> 
       <Layout>
         <div className="flex items-center flex-col flex-grow pt-10">
           <div className="px-5">
@@ -58,7 +61,7 @@ const Home: NextPage = () => {
             </div>
           </div>
         </div>
-      </Layout>
+      </Layout>*/}
     </>
   );
 };
