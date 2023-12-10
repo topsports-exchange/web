@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useDeployedContractInfo, useScaffoldContract } from "./scaffold-eth";
 import { didResolve, isPending, toBetInfo, toWager, youWon } from "./utils";
 import { DeployedEvent } from "@prisma/client";
-import { Contract } from "ethers";
 import { getContract } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 import {
@@ -15,7 +14,6 @@ import {
   Wager,
   WagerArray,
 } from "~~/interfaces/interfaces";
-import { ContractName } from "~~/utils/scaffold-eth/contract";
 
 function useBets() {
   const publicClient = usePublicClient();
@@ -66,8 +64,8 @@ function useBets() {
       const market = allMarkets[betInfo.eventContract][Number(betInfo.marketId)];
       const bet = market.bets[Number(betInfo.betId)];
       const p = retp(betInfo);
-      const home = (eventsDetails[betInfo.eventContract].homeTeam as unknown as Team).name;
-      const away = (eventsDetails[betInfo.eventContract].awayTeam as unknown as Team).name;
+      const home = eventsDetails[betInfo.eventContract].homeTeam as unknown as Team;
+      const away = eventsDetails[betInfo.eventContract].awayTeam as unknown as Team;
       const myTeam = p.choice === EventWinner.HOME_TEAM ? home : away;
       const odds = bet.winner === EventWinner.HOME_TEAM ? market.homeTeamOdds : market.awayTeamOdds;
       const profit = bet.profit;
@@ -110,7 +108,7 @@ function useBets() {
 
           const TopsportsEventCore = getContract({
             address: betInfo.eventContract,
-            abi: deployedContractData?.abi as Contract<ContractName>["abi"],
+            abi: deployedContractData.abi,
             publicClient,
           });
 
@@ -142,12 +140,13 @@ function useBets() {
     fetchContractEvent();
     // }, [account, allMarkets, publicClient, eventsDetails, TopsportsEventFactory, deployedContractData]);
   }, [
+    publicClient,
     account.address,
     account.isConnected,
     allMarkets,
     eventsDetails,
-    TopsportsEventFactory?.address,
-    deployedContractData?.address,
+    TopsportsEventFactory,
+    deployedContractData,
   ]);
 
   const betInfoIsPending = (betInfo: BetInfo) => {

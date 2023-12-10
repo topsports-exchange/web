@@ -171,19 +171,15 @@ const TabBet = (args: { bet: BetInfo }) => {
         <div className="bg-neutral-950 w-full rounded-2xl p-4 text-white">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <img src={betInfo.teamLogo ?? "/assets/LA.png"} alt={betInfo.teamName} className="w-6 h-6 mr-2" />
-              <span>{betInfo.home}</span>
+              <img src={betInfo.home.logo ?? "/assets/LA.png"} alt={betInfo.home.name} className="w-6 h-6 mr-2" />
+              <span>{betInfo.home.name}</span>
             </div>
             <div className="text-emerald-400">{betInfo.odds}</div>
           </div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <img
-                src={betInfo.opponentLogo ?? "/assets/kansas.png"}
-                alt={betInfo.opponentName}
-                className="w-6 h-6 mr-2"
-              />
-              <span>{betInfo.away}</span>
+              <img src={betInfo.away.logo ?? "/assets/kansas.png"} alt={betInfo.away.name} className="w-6 h-6 mr-2" />
+              <span>{betInfo.away.name}</span>
             </div>
           </div>
           <div className="mb-4">
@@ -192,7 +188,7 @@ const TabBet = (args: { bet: BetInfo }) => {
               <span>{betInfo.mult}</span>
             </div>
             <div className="flex justify-between">
-              <span>{betInfo.myTeam} Wins @ </span>
+              <span>{betInfo.myTeam.name} Wins @ </span>
               <span>{betInfo.odds}</span>
             </div>
             <div className="flex justify-between">
