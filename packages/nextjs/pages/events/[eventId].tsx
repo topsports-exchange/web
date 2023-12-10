@@ -2,9 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { MakerSignature, PrismaClient } from "@prisma/client";
-import { Button, KIND as ButtonKind } from "baseui/button";
+import { Button } from "baseui/button";
 import { Card } from "baseui/card";
-import { Modal, ModalBody, ModalButton, ModalFooter, ModalHeader, ROLE, SIZE } from "baseui/modal";
 // import {
 //   // StyledHeadCell,
 //   StyledBodyCell,
@@ -13,12 +12,11 @@ import { Modal, ModalBody, ModalButton, ModalFooter, ModalHeader, ROLE, SIZE } f
 import { ethers } from "ethers";
 import { GetServerSideProps } from "next";
 import { usePublicClient } from "wagmi";
-import { erc20ABI } from "wagmi";
 import { useContractWrite } from "wagmi";
 import Layout from "~~/components/Layout";
 import { MetaHeader } from "~~/components/MetaHeader";
 import OpenMarketCard from "~~/components/OpenMarketCard";
-import PlaceBet, { PlaceBetPopup } from "~~/components/PlaceBet";
+import { BetInterface, PlaceBetPopup } from "~~/components/PlaceBet";
 import { Address } from "~~/components/scaffold-eth/Address";
 import deployedContractsData from "~~/contracts/deployedContracts";
 import {
@@ -27,7 +25,6 @@ import {
   EventPageProps,
   EventWinner,
   MakerSignatureNormalized,
-  TakeSigProps,
   Team,
   Venue,
 } from "~~/interfaces/interfaces";
@@ -57,6 +54,7 @@ const HackWin = (props: any) => {
   return <Button onClick={() => write()}>Hack Winner</Button>;
 };
 
+/*
 const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
   const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
   const {
@@ -115,7 +113,7 @@ const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
     </Modal>
   );
 };
-
+*/
 const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   const router = useRouter();
   const publicClient = usePublicClient();
@@ -324,7 +322,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
                     activeAmount={null}
                     totalAmount={row.limit}
                     setSelectedMatch={() => {
-                      setPlaceBetModalData(event);
+                      setPlaceBetModalData(event as BetInterface);
                       setPlaceBetModalOpen(true);
                       setMakerSignatureId(makerSignatures[rowIndex].id);
                     }}

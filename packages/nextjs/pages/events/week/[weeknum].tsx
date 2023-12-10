@@ -3,12 +3,12 @@ import { useRouter } from "next/router";
 import { DeployedEvent, PrismaClient } from "@prisma/client";
 import { GetServerSideProps } from "next";
 import { EventList } from "~~/components/EventList";
-import { MyBetsTabs } from "~~/components/MyBetsTabs";
-import { customDeserializer, customSerializer } from "~~/utils/serial";
-import { MetaHeader } from "~~/components/MetaHeader";
-import Layout from "~~/components/Layout";
 import { Featured } from "~~/components/Featured";
+import Layout from "~~/components/Layout";
+import { MetaHeader } from "~~/components/MetaHeader";
+import { MyBetsTabs } from "~~/components/MyBetsTabs";
 import { WeekList } from "~~/components/WeekList";
+import { customDeserializer, customSerializer } from "~~/utils/serial";
 
 interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "startdate"> {
   eventDate: string;

@@ -1,25 +1,6 @@
 import { useState } from "react";
-import { BetInterface, PlaceBetPopup } from "./PlaceBet";
 import { useBets } from "~~/hooks/useBets";
 import { BetInfo } from "~~/interfaces/interfaces";
-
-const betDataMock: BetInterface = {
-  teams: [
-    {
-      logo: "https://via.placeholder.com/150?text=Raiders", // Replace with actual logo URL
-      name: "Las Vegas Raiders",
-    },
-    {
-      logo: "https://via.placeholder.com/150?text=Giants", // Replace with actual logo URL
-      name: "New York Giants",
-    },
-  ],
-  odds: 130,
-  winMultiplier: 3,
-  maxBetAmount: 500,
-  maker: "pablo.ETH",
-  marketSmartContractAddress: "0x5a...a6e3",
-};
 
 export const MyBetsTabs = () => {
   const [isLogged] = useState(true);

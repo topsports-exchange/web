@@ -4,4 +4,4 @@ const Featured = () => (
   </div>
 );
 
-export { Featured}
+export { Featured };

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Popup from "./Popup";
-import { JsonObject, JsonValue } from "@prisma/client/runtime/library";
+import { JsonObject } from "@prisma/client/runtime/library";
 import { erc20ABI, useContractWrite } from "wagmi";
 import deployedContractsData from "~~/contracts/deployedContracts";
 import { DeployedEventNormalized, EventWinner, TakeSigProps } from "~~/interfaces/interfaces";
@@ -22,12 +22,7 @@ export const PlaceBetPopup = ({ event, tokenAddress, makerSignature }: TakeSigPr
   // const [isPopupOpen, setPopupOpen] = useState(true);
   const { isPlaceBetModalOpen, placeBetModalData, setPlaceBetModalOpen } = useGlobalState();
   const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
-  const {
-    data,
-    isLoading,
-    isSuccess,
-    write: approveWrite,
-  } = useContractWrite({
+  const { write: approveWrite } = useContractWrite({
     address: tokenAddress,
     abi: erc20ABI,
     functionName: "approve",
@@ -89,7 +84,7 @@ const PlaceBet: React.FC<{ betData: BetInterface; approveWrite: any; placeBetWri
       <div className="flex justify-between mb-4">
         {[betData.homeTeam, betData.awayTeam].map(team => (
           <button
-            key={team.id}
+            key={team.name}
             className={`flex items-center px-4 py-2 rounded-full text-sm font-medium border-2 ${
               selectedTeam?.name === team.name
                 ? "border-green-500 bg-green-500 text-white"

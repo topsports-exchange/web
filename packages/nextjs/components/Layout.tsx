@@ -1,7 +1,4 @@
 import { ReactNode } from "react";
-// import { Header } from "./Header"; // in _app.tsx, before main
-import Menu from "./Menu";
-// import { MyBets } from "./MyBets"; // unused?
 import { MyBetsTabs } from "~~/components/MyBetsTabs";
 
 interface LayoutProps {

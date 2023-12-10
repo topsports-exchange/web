@@ -9,14 +9,14 @@ const EventListItem = ({
 }) => {
   const home = data.homeTeam as unknown as Team;
   const away = data.awayTeam as unknown as Team;
-  const count = 10+(data as any).count as number;
+  const count = (10 + (data as any).count) as number;
   const isLive = (startDate: Date | string): boolean => {
     const startDateObj = startDate instanceof Date ? startDate : new Date(startDate);
-  
+
     const now = new Date();
     const twoHoursAfterStartDate = new Date(startDateObj.getTime());
     twoHoursAfterStartDate.setHours(startDateObj.getHours() + 2); // test with 72 or more
- 
+
     return now > startDateObj && now <= twoHoursAfterStartDate;
   };
 
@@ -69,10 +69,7 @@ const EventListItem = ({
         </div>
       </div>
       <img className="w-8 h-8 left-[16px] top-[16px] absolute rounded-full" src={home.logo ?? "/assets/LA.png"} />
-      <img
-        className="w-8 h-8 left-[16px] top-[64px] absolute rounded-full"
-        src={away.logo ?? "/assets/kansas.png"}
-      />
+      <img className="w-8 h-8 left-[16px] top-[64px] absolute rounded-full" src={away.logo ?? "/assets/kansas.png"} />
     </div>
   );
 };

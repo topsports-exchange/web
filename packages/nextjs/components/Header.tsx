@@ -61,9 +61,7 @@ export const Header = () => {
     useCallback(() => setIsDrawerOpen(false), []),
   );
   if (1) {
-    return (
-      <RainbowKitCustomConnectButton />
-    );
+    return <RainbowKitCustomConnectButton />;
   }
 
   return (
