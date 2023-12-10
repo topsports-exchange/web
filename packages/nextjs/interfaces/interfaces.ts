@@ -39,6 +39,7 @@ export interface EventPageProps {
 }
 
 export interface TakeSigProps {
+  accountAddress: string;
   event: DeployedEventNormalized;
   tokenAddress: `0x${string}`;
   makerSignature: MakerSignatureNormalized;
