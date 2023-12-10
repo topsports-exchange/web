@@ -18,6 +18,7 @@ import { useContractWrite } from "wagmi";
 import Layout from "~~/components/Layout";
 import { MetaHeader } from "~~/components/MetaHeader";
 import OpenMarketCard from "~~/components/OpenMarketCard";
+import PlaceBet, { PlaceBetPopup } from "~~/components/PlaceBet";
 import { Address } from "~~/components/scaffold-eth/Address";
 import deployedContractsData from "~~/contracts/deployedContracts";
 import {
@@ -30,6 +31,7 @@ import {
   Team,
   Venue,
 } from "~~/interfaces/interfaces";
+import { useGlobalState } from "~~/services/store/store";
 
 // import { useStyletron } from 'baseui';
 
@@ -118,6 +120,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   const router = useRouter();
   const publicClient = usePublicClient();
   const { eventId } = router.query;
+  const { setPlaceBetModalData, setPlaceBetModalOpen } = useGlobalState();
   const [contractEventId, setContractEventId] = useState<string | null>(null);
   const [tokenAddress, setTokenAddress] = useState<`0x${string}` | null>(null);
   // const [markets, setMarkets] = useState<any[]>([]);
@@ -320,7 +323,11 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
                     team2={event.awayTeam}
                     activeAmount={null}
                     totalAmount={row.limit}
-                    setSelectedMatch={() => setMakerSignatureId(event.id)}
+                    setSelectedMatch={() => {
+                      setPlaceBetModalData(event);
+                      setPlaceBetModalOpen(true);
+                      setMakerSignatureId(makerSignatures[rowIndex].id);
+                    }}
                   />
                   {/* <StyledBody>
                     <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
@@ -332,6 +339,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
                 </Card>
               ))}
 
+            <PlaceBetPopup />
             {makerSignatureId && tokenAddress && (
               <TakeSig
                 event={event}

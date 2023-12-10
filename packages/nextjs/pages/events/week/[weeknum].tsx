@@ -7,6 +7,8 @@ import { MyBetsTabs } from "~~/components/MyBetsTabs";
 import { customDeserializer, customSerializer } from "~~/utils/serial";
 import { MetaHeader } from "~~/components/MetaHeader";
 import Layout from "~~/components/Layout";
+import { Featured } from "~~/components/Featured";
+import { WeekList } from "~~/components/WeekList";
 
 interface DeployedEventNormalized extends Omit<DeployedEvent, "eventDate" | "startdate"> {
   eventDate: string;
@@ -60,7 +62,8 @@ const WeekPage = ({ weekNumber, events }: WeekProps) => {
 
           {/* Main content area */}
           <div className="flex-1 p-4 max-w-3xl">
-            {/* <Featured /> */}
+            <Featured />
+            <WeekList />
             {/* <WeekPage weekNumber={14} events={events} />
         <BetPage /> */}
             <h1 className="text-2xl font-bold mb-4">Week {weekNumber}</h1>

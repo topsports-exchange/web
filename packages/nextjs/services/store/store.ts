@@ -1,4 +1,5 @@
 import create from "zustand";
+import { BetInterface } from "~~/components/PlaceBet";
 
 /**
  * Zustand Store
@@ -10,11 +11,19 @@ import create from "zustand";
  */
 
 type TGlobalState = {
+  isPlaceBetModalOpen: boolean;
+  setPlaceBetModalOpen: (isOpen: boolean) => void;
+  placeBetModalData?: BetInterface;
+  setPlaceBetModalData: (data?: BetInterface) => void;
   nativeCurrencyPrice: number;
   setNativeCurrencyPrice: (newNativeCurrencyPriceState: number) => void;
 };
 
 export const useGlobalState = create<TGlobalState>(set => ({
+  isPlaceBetModalOpen: false,
+  setPlaceBetModalOpen: (isOpen: boolean) => set(() => ({ isPlaceBetModalOpen: isOpen })),
+  placeBetModalData: undefined,
+  setPlaceBetModalData: (data?: BetInterface) => set(() => ({ placeBetModalData: data })),
   nativeCurrencyPrice: 0,
-  setNativeCurrencyPrice: (newValue: number): void => set(() => ({ nativeCurrencyPrice: newValue })),
+  setNativeCurrencyPrice: (newValue: number) => set(() => ({ nativeCurrencyPrice: newValue })),
 }));
