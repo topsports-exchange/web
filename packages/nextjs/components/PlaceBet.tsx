@@ -164,7 +164,7 @@ const PlaceBet: React.FC<{
       </div>
       {/* <Button onClick={() => approveWrite()}>Approve</Button>
       <Button onClick={() => placeBetWrite()}>Place Bet</Button> */}
-      {parseUnits(betAmount.toString(), DECIMALS) > allowance ? (
+      {!betAmount || parseUnits(betAmount.toString(), DECIMALS) > allowance ? (
         <button
           onClick={() => approveWrite()}
           className="w-full bg-green-600 py-3 rounded-md text-lg font-semibold hover:bg-green-700"
@@ -172,14 +172,13 @@ const PlaceBet: React.FC<{
           Approve
         </button>
       ) : (
-        ""
+        <button
+          onClick={() => placeBetWrite()}
+          className="w-full bg-green-600 py-3 rounded-md text-lg font-semibold hover:bg-green-700"
+        >
+          Place Bet
+        </button>
       )}
-      <button
-        onClick={() => placeBetWrite()}
-        className="w-full bg-green-600 py-3 rounded-md text-lg font-semibold hover:bg-green-700"
-      >
-        Place Bet
-      </button>
       <div className="flex justify-between items-center mt-4">
         <div className="text-sm">Maker</div>
         <div className="text-sm">{betData.address}</div>
