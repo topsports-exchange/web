@@ -339,14 +339,20 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
                 </Card>
               ))}
 
-            <PlaceBetPopup />
             {makerSignatureId && tokenAddress && (
+              <PlaceBetPopup
+                event={event}
+                tokenAddress={tokenAddress ?? "0x000000000000000000"}
+                makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
+              />
+            )}
+            {/* {makerSignatureId && tokenAddress && (
               <TakeSig
                 event={event}
                 tokenAddress={tokenAddress}
                 makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
               />
-            )}
+            )} */}
 
             {/* {useMarkets &&
               markets
