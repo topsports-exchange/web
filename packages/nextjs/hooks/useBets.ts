@@ -60,7 +60,8 @@ function useBets() {
 
   const getBetWithEvent = useCallback(
     ({ betInfo }: { betInfo: BetInfo }) => {
-      if (!eventsDetails || !allMarkets[betInfo.eventContract] || isNaN(+betInfo?.marketId.toString())) return;
+      if (!eventsDetails || !allMarkets[betInfo.eventContract] || isNaN(+betInfo?.marketId.toString()) || !eventsLoaded)
+        return;
       const market = allMarkets[betInfo.eventContract][Number(betInfo.marketId)];
       const bet = market.bets[Number(betInfo.betId)];
       const p = retp(betInfo);
@@ -73,6 +74,9 @@ function useBets() {
       const mult = Number((100n * (stake + profit)) / stake) / 100;
 
       return {
+        pppp: p,
+        eventContract: betInfo.eventContract,
+        accountAddress: account.address,
         home: home,
         away: away,
         myTeam: myTeam,
@@ -85,7 +89,7 @@ function useBets() {
         mult: mult,
       };
     },
-    [allMarkets, eventsDetails, retp],
+    [allMarkets, eventsDetails, retp, eventsLoaded],
   );
 
   useEffect(() => {

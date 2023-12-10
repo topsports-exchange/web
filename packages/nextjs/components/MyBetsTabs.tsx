@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { useContractWrite } from "wagmi";
+import { useScaffoldContract } from "~~/hooks/scaffold-eth";
 import { useBets } from "~~/hooks/useBets";
+import { canClaimAmount } from "~~/hooks/utils";
 import { BetInfo } from "~~/interfaces/interfaces";
 
 export const MyBetsTabs = () => {
@@ -213,10 +216,44 @@ const TabBet = (args: { bet: BetInfo }) => {
               {betInfo.actionText}
             </button>
           )} */}
+          {canClaimAmount(betInfo.pppp) > 0n && (
+            <Claim
+              eventAddress={betInfo.eventContract}
+              accountAddress={betInfo.accountAddress as string}
+              claimAmount={canClaimAmount(betInfo.pppp)}
+            />
+          )}
         </div>
       ) : (
         <div>Loading...</div>
       )}
     </>
+  );
+};
+
+const Claim = ({
+  eventAddress,
+  accountAddress,
+  claimAmount,
+}: {
+  eventAddress: string;
+  accountAddress: string;
+  claimAmount: bigint;
+}) => {
+  const { data: TopsportsEventCore } = useScaffoldContract({ contractName: "TopsportsEventCore" });
+  const { write: claimWrite } = useContractWrite({
+    address: eventAddress,
+    abi: TopsportsEventCore?.abi,
+    //  as Contract<"TopsportsEventCore">["abi"],
+    functionName: "collect",
+    args: [accountAddress],
+  });
+  return (
+    <button
+      className="w-full bg-emerald-500 text-neutral-900 text-lg font-semibold rounded-full py-2 shadow"
+      onClick={() => claimWrite()}
+    >
+      Claim {claimAmount.toString()}
+    </button>
   );
 };
