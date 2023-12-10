@@ -24,16 +24,28 @@ const betDataMock: BetInterface = {
 export const MyBetsTabs = () => {
   const [isLogged] = useState(true);
   const [activeTab, setActiveTab] = useState("pending"); // Added state for active tab
-  const { bets } = useBets();
+  const {
+    betsLoaded,
+    eventsLoaded,
+    bets,
+    // allMarkets,
+    // eventsDetails,
+    betInfoIsPending,
+    betInfoIsWon,
+    betInfoIsHistory,
+  } = useBets();
 
   const renderTabContent = () => {
+    if (!betsLoaded || !eventsLoaded) {
+      return <div>Loading...</div>;
+    }
     switch (activeTab) {
       case "pending":
-        return <TabPending bets={bets} />; // Replace with actual pending bets
+        return <TabPending bets={bets.filter(betInfoIsPending)} />;
       case "wins":
-        return <TabWins bets={[]} />;
+        return <TabWins bets={bets.filter(betInfoIsWon)} />;
       case "history":
-        return <TabHistory />;
+        return <TabHistory bets={bets.filter(betInfoIsHistory)} />;
       default:
         return null;
     }
@@ -213,6 +225,7 @@ const TabBet = (args: { bet: BetInfo }) => {
   );
 };
 
-const TabHistory = () => {
+const TabHistory = (args: { bets: BetInfo[] }) => {
+  console.log("args", args);
   return <div>{/* Content for History Tab */}</div>;
 };
