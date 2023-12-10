@@ -3,9 +3,10 @@ import WeekPage, { getFirstDayOfWeek } from "./events/week/[weeknum]";
 import localFont from "@next/font/local";
 import { DeployedEvent, PrismaClient } from "@prisma/client";
 import { GetServerSideProps, NextPage } from "next";
-import { EventListItem } from "~~/components/EventListItem";
+// import { EventListItem } from "~~/components/EventListItem";
 import { MyBetsTabs } from "~~/components/MyBetsTabs";
 import OpenMarketCard from "~~/components/OpenMarketCard";
+import { BetItemCardProps } from "~~/interfaces/interfaces";
 import { customDeserializer, customSerializer } from "~~/utils/serial";
 
 const prisma = new PrismaClient();
@@ -117,9 +118,13 @@ export const BetPage = () => {
 };
 const BetList = ({ setSelectedMatch }: { setSelectedMatch?: (match: string | null) => void }) => (
   <div className="justify-center items-center my-4 space-x-2 grid grid-cols-2 gap-4">
-    {mockData.map((data, index) => (
-      <EventListItem key={index} setSelectedMatch={setSelectedMatch} data={data} />
-    ))}
+    {mockData.map(
+      (data, index) => {
+        console.log("BetList data not EventListItem", setSelectedMatch, index, data);
+        return <>check log</>;
+      },
+      // <EventListItem key={index} setSelectedMatch={setSelectedMatch} data={data} />
+    )}
   </div>
 );
 export const WeekList = () => (
