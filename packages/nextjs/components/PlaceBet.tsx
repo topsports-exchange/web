@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import Popup from "./Popup";
 import { JsonObject } from "@prisma/client/runtime/library";
-import { erc20ABI, useContractWrite } from "wagmi";
-import deployedContractsData from "~~/contracts/deployedContracts";
+import { parseUnits } from "viem";
+import { erc20ABI, useContractRead, useContractWrite } from "wagmi";
+import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 import { DeployedEventNormalized, EventWinner, TakeSigProps } from "~~/interfaces/interfaces";
 import { useGlobalState } from "~~/services/store/store";
+
+const DECIMALS = 6; // TODO
 
 interface Team {
   logo: string;
@@ -18,23 +21,32 @@ export interface BetInterface extends DeployedEventNormalized {
   homeTeam: EventTeam;
   awayTeam: EventTeam;
 }
-export const PlaceBetPopup = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
+export const PlaceBetPopup = ({ accountAddress, event, tokenAddress, makerSignature }: TakeSigProps) => {
   // const [isPopupOpen, setPopupOpen] = useState(true);
   const { isPlaceBetModalOpen, placeBetModalData, setPlaceBetModalOpen } = useGlobalState();
-  const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
+  // const TopsportsEventCore = deployedContractsData[31337].TopsportsEventCore;
+  const { data: TopsportsEventCore } = useDeployedContractInfo("TopsportsEventCore");
+  const [betAmount, setBetAmount] = useState<number>(0);
+
+  const { data: allowance } = useContractRead({
+    address: tokenAddress,
+    abi: erc20ABI,
+    functionName: "allowance",
+    args: [accountAddress, event.address],
+  });
   const { write: approveWrite } = useContractWrite({
     address: tokenAddress,
     abi: erc20ABI,
     functionName: "approve",
-    args: [event.address, BigInt(100)],
+    args: [event.address, parseUnits(betAmount.toString(), DECIMALS)],
   });
   const { write: placeBetWrite } = useContractWrite({
     address: event.address,
-    abi: TopsportsEventCore.abi,
+    abi: TopsportsEventCore?.abi,
     functionName: "placeBet",
     // TopsportsEventCore.placeBet(100, EventWinner.HOME_TEAM, 100, -200, sigData.limit, sigData.deadline, contractAddr, signature);
     args: [
-      BigInt(100), // amount bet
+      parseUnits(betAmount.toString(), DECIMALS), // amount bet
       EventWinner.HOME_TEAM,
       BigInt(makerSignature.homeTeamOdds),
       BigInt(makerSignature.awayTeamOdds),
@@ -49,16 +61,29 @@ export const PlaceBetPopup = ({ event, tokenAddress, makerSignature }: TakeSigPr
   return (
     <Popup isOpen={isPlaceBetModalOpen} onClose={closePopup}>
       {placeBetModalData && (
-        <PlaceBet betData={placeBetModalData} approveWrite={approveWrite} placeBetWrite={placeBetWrite} />
+        <PlaceBet
+          betData={placeBetModalData}
+          approveWrite={approveWrite}
+          placeBetWrite={placeBetWrite}
+          betAmount={betAmount}
+          setBetAmount={setBetAmount}
+          allowance={allowance || 0n}
+        />
       )}
     </Popup>
   );
 };
-const PlaceBet: React.FC<{ betData: BetInterface; approveWrite: any; placeBetWrite: any }> = args => {
-  const { betData, approveWrite, placeBetWrite } = args;
+const PlaceBet: React.FC<{
+  betData: BetInterface;
+  approveWrite: any;
+  placeBetWrite: any;
+  betAmount: number;
+  setBetAmount: any;
+  allowance: bigint;
+}> = args => {
+  const { betData, approveWrite, placeBetWrite, betAmount, setBetAmount, allowance } = args;
   console.log("PLACE BET DATA", betData);
   const [selectedTeam, setSelectedTeam] = useState<EventTeam | null>(null);
-  const [betAmount, setBetAmount] = useState<number>(0);
 
   const calculatePotentialWin = (amount: number, odds: number[]): number => {
     if (!selectedTeam || odds.length === 0) return 0;
@@ -71,12 +96,16 @@ const PlaceBet: React.FC<{ betData: BetInterface; approveWrite: any; placeBetWri
     setSelectedTeam(team);
   };
 
+  // Math.max(...betData.homeTeam.moneylines, ...betData.awayTeam.moneylines)
+  const max = 69420;
+
   const handleBetAmountChange = (amount: number) => {
     // Assuming maxBetAmount is the maximum value in the moneylines array
-    const maxBetAmount = Math.max(...betData.homeTeam?.moneylines, ...betData.awayTeam.moneylines);
-    if (amount <= maxBetAmount) {
-      setBetAmount(amount);
-    }
+    // const maxBetAmount = Math.max(...betData.homeTeam?.moneylines, ...betData.awayTeam.moneylines);
+    // const maxBetAmount = 69420; // XXX limit - spent
+    // if (amount <= maxBetAmount) {
+    setBetAmount(amount);
+    // }
   };
 
   return (
@@ -126,14 +155,8 @@ const PlaceBet: React.FC<{ betData: BetInterface; approveWrite: any; placeBetWri
             </button>
           ))}
           <button
-            onClick={() =>
-              handleBetAmountChange(Math.max(...betData.homeTeam.moneylines, ...betData.awayTeam.moneylines))
-            }
-            className={`px-4 py-2 rounded-md ${
-              betAmount === Math.max(...betData.homeTeam.moneylines, ...betData.awayTeam.moneylines)
-                ? "bg-green-600"
-                : "bg-green-500"
-            }`}
+            onClick={() => handleBetAmountChange(max)}
+            className={`px-4 py-2 rounded-md ${betAmount === max ? "bg-green-600" : "bg-green-500"}`}
           >
             MAX
           </button>
@@ -141,12 +164,16 @@ const PlaceBet: React.FC<{ betData: BetInterface; approveWrite: any; placeBetWri
       </div>
       {/* <Button onClick={() => approveWrite()}>Approve</Button>
       <Button onClick={() => placeBetWrite()}>Place Bet</Button> */}
-      <button
-        onClick={() => approveWrite()}
-        className="w-full bg-green-600 py-3 rounded-md text-lg font-semibold hover:bg-green-700"
-      >
-        Approve
-      </button>
+      {parseUnits(betAmount.toString(), DECIMALS) > allowance ? (
+        <button
+          onClick={() => approveWrite()}
+          className="w-full bg-green-600 py-3 rounded-md text-lg font-semibold hover:bg-green-700"
+        >
+          Approve
+        </button>
+      ) : (
+        ""
+      )}
       <button
         onClick={() => placeBetWrite()}
         className="w-full bg-green-600 py-3 rounded-md text-lg font-semibold hover:bg-green-700"

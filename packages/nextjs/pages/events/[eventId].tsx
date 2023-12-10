@@ -11,7 +11,7 @@ import { Card } from "baseui/card";
 // } from "baseui/table-grid";
 import { ethers } from "ethers";
 import { GetServerSideProps } from "next";
-import { usePublicClient } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { useContractWrite } from "wagmi";
 import Layout from "~~/components/Layout";
 import { MetaHeader } from "~~/components/MetaHeader";
@@ -115,6 +115,7 @@ const TakeSig = ({ event, tokenAddress, makerSignature }: TakeSigProps) => {
 };
 */
 const EventPage = ({ event, makerSignatures }: EventPageProps) => {
+  const account = useAccount();
   const router = useRouter();
   const publicClient = usePublicClient();
   const { eventId } = router.query;
@@ -337,8 +338,9 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
                 </Card>
               ))}
 
-            {makerSignatureId && tokenAddress && (
+            {makerSignatureId && tokenAddress && account && (
               <PlaceBetPopup
+                accountAddress={account.address as string}
                 event={event}
                 tokenAddress={tokenAddress ?? "0x000000000000000000"}
                 makerSignature={makerSignatures?.find(m => m.id === makerSignatureId) as MakerSignatureNormalized}
