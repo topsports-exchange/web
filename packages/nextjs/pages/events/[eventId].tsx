@@ -3,18 +3,20 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { MakerSignature, PrismaClient } from "@prisma/client";
 import { Button, KIND as ButtonKind } from "baseui/button";
-import { Card, StyledBody } from "baseui/card";
+import { Card } from "baseui/card";
 import { Modal, ModalBody, ModalButton, ModalFooter, ModalHeader, ROLE, SIZE } from "baseui/modal";
-import {
-  // StyledHeadCell,
-  StyledBodyCell,
-  StyledTable,
-} from "baseui/table-grid";
+// import {
+//   // StyledHeadCell,
+//   StyledBodyCell,
+//   StyledTable,
+// } from "baseui/table-grid";
 import { ethers } from "ethers";
 import { GetServerSideProps } from "next";
 import { usePublicClient } from "wagmi";
 import { erc20ABI } from "wagmi";
 import { useContractWrite } from "wagmi";
+import Layout from "~~/components/Layout";
+import { MetaHeader } from "~~/components/MetaHeader";
 import OpenMarketCard from "~~/components/OpenMarketCard";
 import { Address } from "~~/components/scaffold-eth/Address";
 import deployedContractsData from "~~/contracts/deployedContracts";
@@ -28,8 +30,6 @@ import {
   Team,
   Venue,
 } from "~~/interfaces/interfaces";
-import { MetaHeader } from "~~/components/MetaHeader";
-import Layout from "~~/components/Layout";
 
 // import { useStyletron } from 'baseui';
 
@@ -120,7 +120,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
   const { eventId } = router.query;
   const [contractEventId, setContractEventId] = useState<string | null>(null);
   const [tokenAddress, setTokenAddress] = useState<`0x${string}` | null>(null);
-  const [markets, setMarkets] = useState<any[]>([]);
+  // const [markets, setMarkets] = useState<any[]>([]);
   const [makerSignatureId, setMakerSignatureId] = useState<number | null>(null);
   const [winner, setWinner] = useState(EventWinner.UNDEFINED);
   const [eventDisplayDetails, setEventDisplayDetails] = useState<EventDisplayDetails | null>(null);
@@ -185,7 +185,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
         };
 
         if (useMarkets) {
-          setMarkets((await readEventContract("getAllMarkets")) as any[]); // TODO match sigs
+          // setMarkets((await readEventContract("getAllMarkets")) as any[]); // TODO match sigs
         }
 
         setTokenAddress((await readEventContract("token")) as `0x${string}`);
@@ -292,23 +292,23 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
 
             {makerSignatures
               ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
-              ?.map(m => {
-                // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
-                return [
-                  "Use",
-                  eventDisplayDetails.homeTeamName,
-                  eventDisplayDetails.awayTeamName,
-                  "Limit",
-                  "Deadline",
-                  <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
-                    Get in &gt;&gt;
-                  </Button>,
-                  m.homeTeamOdds,
-                  m.awayTeamOdds,
-                  m.limit,
-                  new Date(1000 * parseInt(m.deadline)).toLocaleString(),
-                ];
-              })
+              // ?.map(m => {
+              //   // return [m.id, m.maker, m.spender, m.nonce, m.homeTeamOdds, m.awayTeamOdds, m.limit, m.deadline, m.signature];
+              //   return [
+              //     "Use",
+              //     eventDisplayDetails.homeTeamName,
+              //     eventDisplayDetails.awayTeamName,
+              //     "Limit",
+              //     "Deadline",
+              //     <Button key={m.id} onClick={() => setMakerSignatureId(m.id)}>
+              //       Get in &gt;&gt;
+              //     </Button>,
+              //     m.homeTeamOdds,
+              //     m.awayTeamOdds,
+              //     m.limit,
+              //     new Date(1000 * parseInt(m.deadline)).toLocaleString(),
+              //   ];
+              // })
               .map((row, rowIndex) => (
                 <Card
                   key={rowIndex}
@@ -319,16 +319,16 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
                     team1={event.homeTeam}
                     team2={event.awayTeam}
                     activeAmount={null}
-                    totalAmount={event.limit}
+                    totalAmount={row.limit}
                     setSelectedMatch={() => setMakerSignatureId(event.id)}
                   />
-                  <StyledBody>
+                  {/* <StyledBody>
                     <StyledTable role="grid" $gridTemplateColumns="repeat(5,1fr)">
                       {row.map((cell, cellIndex) => (
                         <StyledBodyCell key={cellIndex}>{cell}</StyledBodyCell>
                       ))}
                     </StyledTable>
-                  </StyledBody>
+                  </StyledBody> */}
                 </Card>
               ))}
 
@@ -340,7 +340,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
               />
             )}
 
-            {useMarkets &&
+            {/* {useMarkets &&
               markets
                 ?.filter(m => new Date(parseInt(m.deadline) * 1000) > new Date())
                 ?.map(m => {
@@ -372,7 +372,7 @@ const EventPage = ({ event, makerSignatures }: EventPageProps) => {
                       </StyledTable>
                     </StyledBody>
                   </Card>
-                ))}
+                ))} */}
           </div>
           {/* <div className="col-span-1">
             <MyBetsTabs />
