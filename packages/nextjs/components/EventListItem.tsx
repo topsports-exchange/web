@@ -1,4 +1,4 @@
-import { DeployedEventNormalized } from "~~/interfaces/interfaces";
+import { DeployedEventNormalized, Team } from "~~/interfaces/interfaces";
 
 const EventListItem = ({
   data,
@@ -7,6 +7,19 @@ const EventListItem = ({
   data: DeployedEventNormalized;
   setSelectedMatch?: (match: string | null) => void;
 }) => {
+  const home = data.homeTeam as unknown as Team;
+  const away = data.awayTeam as unknown as Team;
+  const count = 10+(data as any).count as number;
+  const isLive = (startDate: Date | string): boolean => {
+    const startDateObj = startDate instanceof Date ? startDate : new Date(startDate);
+  
+    const now = new Date();
+    const twoHoursAfterStartDate = new Date(startDateObj.getTime());
+    twoHoursAfterStartDate.setHours(startDateObj.getHours() + 2); // test with 72 or more
+ 
+    return now > startDateObj && now <= twoHoursAfterStartDate;
+  };
+
   return (
     <div className="bg-neutral-900 text-white p-4 rounded-lg w-auto h-40 relative">
       <div className="left-[16px] top-[116px] absolute text-slate-400 text-base font-medium font-['Exo 2'] leading-normal">
@@ -20,7 +33,7 @@ const EventListItem = ({
             })
           : ""}
       </div>
-      {data.isLive && (
+      {isLive(data.startdate) && (
         <div className="w-20 h-8 left-[272px] top-[16px] absolute">
           <div className="w-20 h-8 left-0 top-0 absolute bg-gradient-to-r from-red-600 to-rose-600 rounded" />
           <div className="left-[37px] top-[4px] absolute text-white text-base font-medium font-['Exo 2'] leading-normal">
@@ -38,10 +51,10 @@ const EventListItem = ({
         </div>
       )}
       <div className="left-[56px] top-[20px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        {data.homeTeam?.name}
+        {home.name}
       </div>
       <div className="left-[56px] top-[68px] absolute text-white text-lg font-medium font-['Exo 2'] leading-normal">
-        {data.awayTeam?.name}
+        {away.name}
       </div>
       <div className="w-32 h-10 left-[224px] top-[100px] absolute">
         <div className="w-32 h-10 left-0 top-0 absolute opacity-10 bg-gradient-to-r from-emerald-400 via-cyan-400 to-green-500 rounded-full" />
@@ -49,16 +62,16 @@ const EventListItem = ({
           onClick={() => setSelectedMatch?.(data.eventId)}
           className="left-[14px] top-[8px] absolute text-white text-base font-semibold font-['Exo 2'] leading-normal"
         >
-          {data.count} markets
+          {count} markets
         </button>
         <div className="w-5 h-5 left-[94px] top-[12px] absolute">
           <img className="w-3.5 h-3 left-[3.75px] top-[3.75px] absolute" src="https://via.placeholder.com/14x12" />
         </div>
       </div>
-      <img className="w-8 h-8 left-[16px] top-[16px] absolute rounded-full" src={data.team1Logo ?? "/assets/LA.png"} />
+      <img className="w-8 h-8 left-[16px] top-[16px] absolute rounded-full" src={home.logo ?? "/assets/LA.png"} />
       <img
         className="w-8 h-8 left-[16px] top-[64px] absolute rounded-full"
-        src={data.team2Logo ?? "/assets/kansas.png"}
+        src={away.logo ?? "/assets/kansas.png"}
       />
     </div>
   );
