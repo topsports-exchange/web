@@ -28,6 +28,8 @@
 
 Topsports.Exchange envisions making it easy for bettors to access the best odds for a particular game. The platform facilitates the seamless proposal, update, or closure of markets, positioning itself as a bridge for traditional web2 betting into the web3 era.
 
+During the Constellation Hackathon, we are extending our support to the regular season of the American Football NFL, specifically focusing on events and markets for weeks 14 and 15, coinciding with the judging period of the hackathon. Our future plans include expanding our support to encompass a broader range of sports such as basketball, baseball, hockey, and boxing, along with extending our coverage to include more minor leagues.
+
 ## What problems are we solving?
 
 **Topsports.Exchange** resolves several challenges in the online sports betting industry:
