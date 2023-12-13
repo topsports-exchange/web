@@ -1,0 +1,307 @@
+[
+  { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "target", "type": "address" }
+    ],
+    "name": "AddressEmptyCode",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "AddressInsufficientBalance",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "winner", "type": "uint256" }
+    ],
+    "name": "EventNotResolved",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "deadline", "type": "uint256" }
+    ],
+    "name": "ExpiredSignature",
+    "type": "error"
+  },
+  { "inputs": [], "name": "FailedInnerCall", "type": "error" },
+  { "inputs": [], "name": "InvalidInitialization", "type": "error" },
+  { "inputs": [], "name": "InvalidResolver", "type": "error" },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "winner", "type": "uint256" }
+    ],
+    "name": "InvalidWinner",
+    "type": "error"
+  },
+  { "inputs": [], "name": "MathOverflowedMulDiv", "type": "error" },
+  { "inputs": [], "name": "NotInitializing", "type": "error" },
+  {
+    "inputs": [{ "internalType": "bytes", "name": "err", "type": "bytes" }],
+    "name": "ResolutionError",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "token", "type": "address" }
+    ],
+    "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "consumer", "type": "address" }
+    ],
+    "name": "UnauthorizedConsumer",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "requestId", "type": "bytes32" }
+    ],
+    "name": "UnexpectedRequestID",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "_eventId",
+        "type": "uint64"
+      }
+    ],
+    "name": "CollectPayout",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  { "anonymous": false, "inputs": [], "name": "PlaceBet", "type": "event" },
+  { "anonymous": false, "inputs": [], "name": "ResolveEvent", "type": "event" },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "ResolvedEvent",
+    "type": "event"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "_to", "type": "address" }],
+    "name": "collect",
+    "outputs": [
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "consumer",
+    "outputs": [
+      {
+        "internalType": "contract ITopsportsFunctionsConsumer",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "eventId",
+    "outputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAllMarkets",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "address", "name": "maker", "type": "address" },
+          { "internalType": "int64", "name": "homeTeamOdds", "type": "int64" },
+          { "internalType": "int64", "name": "awayTeamOdds", "type": "int64" },
+          { "internalType": "uint256", "name": "limit", "type": "uint256" },
+          { "internalType": "uint64", "name": "deadline", "type": "uint64" },
+          {
+            "components": [
+              { "internalType": "address", "name": "taker", "type": "address" },
+              { "internalType": "uint256", "name": "stake", "type": "uint256" },
+              {
+                "internalType": "uint256",
+                "name": "profit",
+                "type": "uint256"
+              },
+              {
+                "internalType": "enum TopsportsEventCore.EventWinner",
+                "name": "winner",
+                "type": "uint8"
+              }
+            ],
+            "internalType": "struct TopsportsEventCore.Bet[]",
+            "name": "bets",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct TopsportsEventCore.Market[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint64", "name": "_eventId", "type": "uint64" },
+      { "internalType": "uint64", "name": "_startdate", "type": "uint64" },
+      { "internalType": "address", "name": "_token", "type": "address" },
+      { "internalType": "address", "name": "_consumer", "type": "address" },
+      { "internalType": "bytes32", "name": "_resolverHash", "type": "bytes32" }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "markets",
+    "outputs": [
+      { "internalType": "address", "name": "maker", "type": "address" },
+      { "internalType": "int64", "name": "homeTeamOdds", "type": "int64" },
+      { "internalType": "int64", "name": "awayTeamOdds", "type": "int64" },
+      { "internalType": "uint256", "name": "limit", "type": "uint256" },
+      { "internalType": "uint64", "name": "deadline", "type": "uint64" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_stake", "type": "uint256" },
+      {
+        "internalType": "enum TopsportsEventCore.EventWinner",
+        "name": "_winner",
+        "type": "uint8"
+      },
+      { "internalType": "int64", "name": "_homeTeamOdds", "type": "int64" },
+      { "internalType": "int64", "name": "_awayTeamOdds", "type": "int64" },
+      { "internalType": "uint256", "name": "_limit", "type": "uint256" },
+      { "internalType": "uint64", "name": "_deadline", "type": "uint64" },
+      { "internalType": "address", "name": "_maker", "type": "address" },
+      { "internalType": "bytes", "name": "_signature", "type": "bytes" }
+    ],
+    "name": "placeBet",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "_requestId", "type": "bytes32" },
+      { "internalType": "bytes", "name": "_response", "type": "bytes" },
+      { "internalType": "bytes", "name": "_err", "type": "bytes" }
+    ],
+    "name": "resolutionCallback",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "string", "name": "_source", "type": "string" },
+      { "internalType": "uint64", "name": "_subscriptionId", "type": "uint64" },
+      { "internalType": "uint32", "name": "_gasLimit", "type": "uint32" },
+      { "internalType": "bytes32", "name": "_donID", "type": "bytes32" }
+    ],
+    "name": "resolveEvent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "startdate",
+    "outputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "token",
+    "outputs": [
+      { "internalType": "contract IERC20", "name": "", "type": "address" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "wagerByAddress",
+    "outputs": [
+      { "internalType": "uint256", "name": "totalWagered", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "totalHomePayout",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalAwayPayout",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "winner",
+    "outputs": [
+      {
+        "internalType": "enum TopsportsEventCore.EventWinner",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
