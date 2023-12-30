@@ -1,0 +1,11 @@
+{
+  "fuji": {
+    "TopsportsEventFactory": {
+      "address": "0x09448b446a00Fa5f4DE60609098a54dC134B3295",
+      "startBlock": 28448630
+    },
+    "TopsportsEventCore": {
+      "address": "0x343E4821f925d80b31Fe0Db33B595230F131935C"
+    }
+  }
+}

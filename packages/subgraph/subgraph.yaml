@@ -1,0 +1,55 @@
+specVersion: 0.0.5
+schema:
+    file: ./schema.graphql
+dataSources:
+    - kind: ethereum
+      name: TopsportsEventFactory
+      network: fuji
+      source:
+          address: "0x09448b446a00Fa5f4DE60609098a54dC134B3295"
+          abi: TopsportsEventFactory
+          startBlock: 28448630
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.7
+          language: wasm/assemblyscript
+          entities:
+              - CreateInstance
+          abis:
+              - name: TopsportsEventFactory
+                file: ./abis/TopsportsEventFactory.json
+          eventHandlers:
+              - event: CreateInstance(indexed address)
+                handler: handleCreateInstance
+          file: ./src/topsports-event-factory.ts
+templates:
+    - kind: ethereum
+      name: TopsportsEventCore
+      network: fuji
+      source:
+          abi: TopsportsEventCore
+      mapping:
+          kind: ethereum/events
+          apiVersion: 0.0.7
+          language: wasm/assemblyscript
+          entities:
+              - CollectPayout
+              - Initialized
+              - PlaceBet
+              - ResolveEvent
+              - ResolvedEvent
+          abis:
+              - name: TopsportsEventCore
+                file: ./abis/TopsportsEventCore.json
+          eventHandlers:
+              - event: CollectPayout(uint256,address,uint64)
+                handler: handleCollectPayout
+              - event: Initialized(uint64)
+                handler: handleInitialized
+              - event: PlaceBet()
+                handler: handlePlaceBet
+              - event: ResolveEvent()
+                handler: handleResolveEvent
+              - event: ResolvedEvent(uint256)
+                handler: handleResolvedEvent
+          file: ./src/topsports-event-core.ts

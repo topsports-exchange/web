@@ -114,9 +114,27 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
     await postToApi({
       eventId: eventId.toString(),
       displayName,
-      deadline: startdate.toString(), // TODO schema
+      startdate: startdate.toString(),
       address: contractAddr,
       eventDate,
+      venue: JSON.stringify({
+        city: "Detroit",
+        name: "Stadium",
+      }),
+      homeTeam: JSON.stringify({
+        id: "23",
+        logo: "https://a.espncdn.com/i/teamlogos/nfl/500/pit.png",
+        name: "Pittsburgh Steelers",
+        homeAway: "home",
+        moneylines: [-290, -267, -267, -230, -304, -275, -238, -270, -263, -275],
+      }),
+      awayTeam: JSON.stringify({
+        id: "17",
+        logo: "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+        name: "New England Patriots",
+        homeAway: "away",
+        moneylines: [240, 215, 215, 180, 208, 225, 190, 215, 220, 210],
+      }),
     });
   } catch (e) {
     console.error("Error posting to API:", (e as any).response.data.error);

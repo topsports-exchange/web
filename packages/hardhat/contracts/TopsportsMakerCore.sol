@@ -32,6 +32,8 @@ contract TopsportsMakerCore is Initializable, EIP712, Nonces, Ownable {
     // Immutable variables
     IERC20 public token; // stake/wager token
 
+    event Withdraw(address _token, address _to, uint256 _amount);
+
     constructor() {
         _disableInitializers();
     }
@@ -128,6 +130,7 @@ contract TopsportsMakerCore is Initializable, EIP712, Nonces, Ownable {
      */
     function withdraw(address _token, address _to, uint256 _amount) external onlyOwner {
         IERC20(_token).safeTransfer(_to, _amount);
+        emit Withdraw(_token, _to, _amount);
     }
 
     /**

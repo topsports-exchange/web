@@ -1,22 +1,23 @@
 // pages/api/createPost.ts
-import { PrismaClient } from "@prisma/client";
+// import { PrismaClient } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
     try {
-      const { title, content } = req.body;
+      // const { title, content } = req.body;
 
-      const newPost = await prisma.post.create({
-        data: {
-          title,
-          content,
-        },
-      });
+      // const newPost = await prisma.post.create({
+      //   data: {
+      //     title,
+      //     content,
+      //   },
+      // });
 
-      res.status(201).json(newPost);
+      // res.status(201).json(newPost);
+      res.status(201).json("XXX");
     } catch (error) {
       console.error("Error creating post:", error);
       res.status(500).json({ error: "Internal Server Error" });

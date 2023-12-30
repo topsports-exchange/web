@@ -1,0 +1,139 @@
+[
+  { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "target", "type": "address" }
+    ],
+    "name": "AddressEmptyCode",
+    "type": "error"
+  },
+  { "inputs": [], "name": "ERC1167FailedCreateClone", "type": "error" },
+  { "inputs": [], "name": "FailedInnerCall", "type": "error" },
+  { "inputs": [], "name": "UnauthorizedEvent", "type": "error" },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "instance",
+        "type": "address"
+      }
+    ],
+    "name": "CreateInstance",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "IMPLEMENTATION",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
+    "name": "betsByAddress",
+    "outputs": [
+      { "internalType": "uint64", "name": "eventId", "type": "uint64" },
+      { "internalType": "address", "name": "eventContract", "type": "address" },
+      { "internalType": "uint64", "name": "startdate", "type": "uint64" },
+      { "internalType": "uint256", "name": "marketId", "type": "uint256" },
+      { "internalType": "uint256", "name": "betId", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "_salt", "type": "bytes32" },
+      { "internalType": "bytes", "name": "_data", "type": "bytes" }
+    ],
+    "name": "createInstance",
+    "outputs": [
+      { "internalType": "address", "name": "instance", "type": "address" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "name": "eventContractByEventId",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "eventContracts",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getEventContracts",
+    "outputs": [
+      { "internalType": "address[]", "name": "", "type": "address[]" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "isRegisteredEvent",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes[]", "name": "data", "type": "bytes[]" }
+    ],
+    "name": "multicall",
+    "outputs": [
+      { "internalType": "bytes[]", "name": "results", "type": "bytes[]" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "_salt", "type": "bytes32" }
+    ],
+    "name": "predictAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "predictedAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "_taker", "type": "address" },
+      { "internalType": "uint64", "name": "_eventId", "type": "uint64" },
+      { "internalType": "uint64", "name": "_startdate", "type": "uint64" },
+      { "internalType": "uint256", "name": "_marketId", "type": "uint256" },
+      { "internalType": "uint256", "name": "_betId", "type": "uint256" }
+    ],
+    "name": "registerBet",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint64", "name": "_eventId", "type": "uint64" }
+    ],
+    "name": "registerEvent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

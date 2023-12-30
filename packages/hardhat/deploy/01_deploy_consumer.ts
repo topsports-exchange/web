@@ -1,7 +1,8 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
-const router = "0xA9d587a00A31A52Ed70D6026794a8FC5E2F5dCb0"; // Chainlink router address on Fuji
+// const router = "0xA9d587a00A31A52Ed70D6026794a8FC5E2F5dCb0"; // Chainlink router address on Fuji
+const router = "0x6E2dc0F9DB014aE19888F539E59285D2Ea04244C"; // Chainlink router address on Fuji
 /**
  * Deploys a contract named "TopsportsFunctionsConsumer" using the deployer account and
  * constructor arguments set to the deployer address

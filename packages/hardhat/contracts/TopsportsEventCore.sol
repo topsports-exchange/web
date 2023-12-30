@@ -52,6 +52,7 @@ contract TopsportsEventCore is Initializable, Context {
     event PlaceBet();
     event ResolveEvent();
     event ResolvedEvent(uint256);
+    event CollectPayout(uint256 _amount, address _to, uint64 _eventId);
 
     error ResolutionError(bytes err);
     error InvalidResolver();
@@ -257,6 +258,7 @@ contract TopsportsEventCore is Initializable, Context {
         uint32 _gasLimit,
         bytes32 _donID // Fixed at event creation?
     ) public {
+        //FIXME! Disable `onlyOwner` for testing/hackathon purpose
         //FIXME! Disable resolver validation for testing/hackathon purpose
         // if (keccak256(bytes(_source)) != resolverHash) revert InvalidResolver();
 
@@ -329,7 +331,6 @@ contract TopsportsEventCore is Initializable, Context {
         token.safeTransfer(_to, amount);
         delete (wagerByAddress[_msgSender()]);
 
-        // Uncomment the following line if you want to emit a Claimed event
-        // emit Claimed(payout);
+        emit CollectPayout(amount, _to, eventId);
     }
 }
