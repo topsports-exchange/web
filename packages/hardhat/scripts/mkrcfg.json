@@ -1,0 +1,8 @@
+{
+  "eventsFilePath": "./scripts/createEvents.json",
+  "accountIndex": 0,
+  "stakeTokenAddress": "",
+  "limit": 1234567890,
+  "goodForSeconds": 60,
+  "refreshInterval": 60
+}
