@@ -65,7 +65,9 @@ export async function postToApi(payload: { signature: string; [key: string]: num
 
   try {
     const response = await axios.post(apiUrl, convertedPayload);
-    console.log("API Response:", response.data);
+    if (false) {
+      console.log("API Response:", response.data);
+    }
   } catch (error) {
     console.error("Error posting to API:", (error as any).response.data.error);
   }
