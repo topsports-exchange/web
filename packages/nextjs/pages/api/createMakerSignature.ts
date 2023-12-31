@@ -1,5 +1,6 @@
 // pages/api/createMakerSignature.ts
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { DefaultArgs } from "@prisma/client/runtime/library";
 import { NextApiRequest, NextApiResponse } from "next";
 
 interface CreateSignatureRequest {
@@ -15,6 +16,10 @@ interface CreateSignatureRequest {
 }
 
 const prisma = new PrismaClient();
+const prisma__makerSignature =
+  process.env.DATABASE_DEV_POSTFIX === "_tomo"
+    ? (prisma.makerSignature_tomo as unknown as Prisma.MakerSignatureDelegate<DefaultArgs>)
+    : prisma.makerSignature;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
@@ -42,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const normalizedLimit = parseInt(limit, 10);
       const normalizedDeadline = new Date(Number(deadline) * 1000); // Convert seconds to milliseconds
 
-      const createdSignature = await prisma.makerSignature.create({
+      const createdSignature = await prisma__makerSignature.create({
         data: {
           maker,
           eventDate: new Date(eventDate),

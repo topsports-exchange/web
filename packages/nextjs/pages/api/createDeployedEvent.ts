@@ -1,9 +1,16 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { DefaultArgs } from "@prisma/client/runtime/library";
 import { JsonRpcProvider, ethers } from "ethers";
 import { NextApiRequest, NextApiResponse } from "next";
 import deployedContractsData from "~~/contracts/deployedContracts";
+import scaffoldConfig from "~~/scaffold.config";
 
 const prisma = new PrismaClient();
+const prisma__deployedEvent =
+  process.env.DATABASE_DEV_POSTFIX === "_tomo"
+    ? (prisma.deployedEvent_tomo as unknown as Prisma.DeployedEventDelegate<DefaultArgs>)
+    : prisma.deployedEvent;
+
 const startdateCheck = false; // TODO enable
 
 function saltEvent(eventId: number, displayName: string): string {
@@ -40,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Check if the event ID or address already exists
-    const existing = await prisma.deployedEvent.findFirst({
+    const existing = await prisma__deployedEvent.findFirst({
       where: {
         OR: [{ eventId }, { address }],
       },
@@ -61,10 +68,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      // TODO not static 31337/hardhat
       // read the TopsportsEventCore at the address and verify eventId
-      const provider = new JsonRpcProvider(process.env.RPC_ENDPOINT_URL ?? ("" as `http://${string}`));
-      // const provider = new JsonRpcProvider("http://127.0.0.1:8545" as `http://${string}`);
+      const rpc =
+        (scaffoldConfig.targetNetwork.id === 31337 ? "http://127.0.0.1:8545" : process.env.RPC_ENDPOINT_URL) ??
+        ("" as `http://${string}`);
+      const provider = new JsonRpcProvider(rpc);
       const TopsportsEventCore = new ethers.Contract(
         address,
         deployedContractsData[31337].TopsportsEventCore.abi,
@@ -78,12 +86,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: "Event ID mismatch in the contract" });
       }
     } catch (error) {
-      console.error("Error reading the TopsportsEventCore at the address to verify eventId:", error);
+      console.error("Error reading the TopsportsEventCore at the address " + address + " to verify eventId:", error);
       return res.status(400).json({ error: "Error reading the TopsportsEventCore at the address to verify eventId" });
     }
 
     // Cache the Event in the database
-    const newEvent = await prisma.deployedEvent.create({
+    const newEvent = await prisma__deployedEvent.create({
       data: {
         eventId,
         displayName,

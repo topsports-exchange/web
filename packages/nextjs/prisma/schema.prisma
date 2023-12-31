@@ -42,3 +42,36 @@ model DeployedEvent {
   homeTeam    Json
   awayTeam    Json
 }
+
+model MakerSignature_tomo {
+  id                     Int       @id @default(autoincrement())
+  maker                  String
+  spender                String
+  homeTeamOdds           String
+  awayTeamOdds           String
+  limit                  String
+  nonce                  String
+  deadline               String
+  signature              String
+
+  // Normalized fields
+  homeTeamOddsNormalized Int
+  awayTeamOddsNormalized Int
+  limitNormalized       Int
+  deadlineNormalized    DateTime
+
+  eventDate   DateTime  // denormal DeployedEvent
+}
+
+model DeployedEvent_tomo {
+  id          Int       @id @default(autoincrement())
+  eventId     String    @unique // ESPN API
+  displayName String
+  eventDate   DateTime
+  startdate   DateTime  // event scheduled time
+  address     String    @unique // contract
+  salt        String    @unique
+  venue       Json
+  homeTeam    Json
+  awayTeam    Json
+}
