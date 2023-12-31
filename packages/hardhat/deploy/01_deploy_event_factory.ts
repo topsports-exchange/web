@@ -32,7 +32,7 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
     autoMine: true,
   });
 
-  createSampleEvent(hre);
+  await createSampleEvent(hre);
 };
 
 export default deployTopsportsEventFactory;
