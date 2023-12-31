@@ -4,7 +4,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import * as fs from "fs";
 import hre from "hardhat";
 
-const configFile: string = "./scripts/mkrcfg.json";
+const configFile = "./scripts/mkrcfg.json";
 
 interface ConfigObject {
   eventsFilePath: string;
@@ -83,8 +83,8 @@ function saltMaker(_token: string, _owner: string): string {
 
 async function saltTokenOwner(_token: string, _owner: string): Promise<string> {
   if (_token === "") {
-    const MockEuroe = await hre.ethers.getContract("MockEuroe");
-    return saltMaker(MockEuroe.address, _owner);
+    const USDCoin = await hre.ethers.getContract("USDCoin");
+    return saltMaker(USDCoin.address, _owner);
   } else {
     return saltMaker(_token, _owner);
   }

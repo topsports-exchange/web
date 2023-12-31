@@ -59,8 +59,8 @@ async function main() {
     const events: Event[] = JSON.parse(eventsContent).events;
 
     const TopsportsMakerFactory = await hre.ethers.getContract("TopsportsMakerFactory", deployer);
-    const MockEuroe = await hre.ethers.getContract("MockEuroe", deployer);
-    const salt = saltMaker(MockEuroe.address, account1.address);
+    const USDCoin = await hre.ethers.getContract("USDCoin", deployer);
+    const salt = saltMaker(USDCoin.address, account1.address);
     const factoryContract = TopsportsMakerFactory;
     const contractAddr = await factoryContract.predictAddress(salt);
 

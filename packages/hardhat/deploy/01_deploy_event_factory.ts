@@ -60,7 +60,7 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   const TopsportsEventFactory = await hre.ethers.getContract("TopsportsEventFactory", deployer);
 
   const TopsportsFunctionsConsumer = await hre.ethers.getContract("TopsportsFunctionsConsumer", deployer);
-  const MockEuroe = await hre.ethers.getContract("MockEuroe", deployer);
+  const USDCoin = await hre.ethers.getContract("USDCoin", deployer);
 
   // adapted tasks/create.ts 'create-event' task
   const eventFactory = await hre.ethers.getContractFactory("TopsportsEventCore");
@@ -73,7 +73,7 @@ const deployTopsportsEventFactory: DeployFunction = async function (hre: Hardhat
   const initializeData = eventFactory.interface.encodeFunctionData(fragment, [
     eventId,
     startdate,
-    MockEuroe.address,
+    USDCoin.address,
     TopsportsFunctionsConsumer.address,
     hre.ethers.utils.solidityKeccak256(["string"], [source]),
   ]);

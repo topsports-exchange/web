@@ -2,12 +2,12 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
 /**
- * Deploys a contract named "MockEuroe" using the deployer account and
+ * Deploys a contract named "USDCoin" using the deployer account and
  * constructor arguments set to the deployer address
  *
  * @param hre HardhatRuntimeEnvironment object.
  */
-const deployMockEuroe: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployUSDCoin: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
 
@@ -22,7 +22,7 @@ const deployMockEuroe: DeployFunction = async function (hre: HardhatRuntimeEnvir
   const { deploy } = hre.deployments;
 
   await deploy("USDCoin", {
-    // await deploy("MockEuroe", {
+    // await deploy("USDCoin", {
     from: deployer,
     // Contract constructor arguments
     // args: [deployer],
@@ -33,12 +33,12 @@ const deployMockEuroe: DeployFunction = async function (hre: HardhatRuntimeEnvir
   });
 
   // Get the deployed contract
-  // const MockEuroe = await hre.ethers.getContract("MockEuroe", deployer);
-  // await MockEuroe.mint(deployer, 123456000000);
+  // const USDCoin = await hre.ethers.getContract("USDCoin", deployer);
+  // await USDCoin.mint(deployer, 123456000000);
 };
 
-export default deployMockEuroe;
+export default deployUSDCoin;
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
-// e.g. yarn deploy --tags MockEuroe
-deployMockEuroe.tags = ["MockEuroe"];
+// e.g. yarn deploy --tags USDCoin
+deployUSDCoin.tags = ["USDCoin"];

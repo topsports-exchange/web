@@ -50,14 +50,14 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
   // Get the deployed contract
   const TopsportsMakerFactory = await hre.ethers.getContract("TopsportsMakerFactory", deployer);
 
-  const MockEuroe = await hre.ethers.getContract("MockEuroe", deployer);
+  const USDCoin = await hre.ethers.getContract("USDCoin", deployer);
 
   // adapted tasks/create.ts 'create-event' task
   const MakerFactory = await hre.ethers.getContractFactory("TopsportsMakerCore");
   const fragment = MakerFactory.interface.getFunction("initialize");
   if (!fragment) throw new Error("initialize function not found in interface");
-  const initializeData = MakerFactory.interface.encodeFunctionData(fragment, [MockEuroe.address, account1.address]);
-  const salt = saltMaker(MockEuroe.address, account1.address);
+  const initializeData = MakerFactory.interface.encodeFunctionData(fragment, [USDCoin.address, account1.address]);
+  const salt = saltMaker(USDCoin.address, account1.address);
   const factoryContract = TopsportsMakerFactory;
 
   const contractAddr = await factoryContract.predictAddress(salt);
@@ -69,8 +69,8 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
 
     fs.writeFileSync("./scripts/makerAddress.ts", `export const address = '${contractAddr}';`, { encoding: "utf-8" });
 
-    await MockEuroe.mint(contractAddr, parseUnits("10000.0", 6));
-    console.log(`Balance after minting: ${hre.ethers.utils.formatUnits(await MockEuroe.balanceOf(contractAddr), 6)}`);
+    await USDCoin.mint(contractAddr, parseUnits("10000.0", 6));
+    console.log(`Balance after minting: ${hre.ethers.utils.formatUnits(await USDCoin.balanceOf(contractAddr), 6)}`);
   }
 
   if (true) {
@@ -110,7 +110,7 @@ const deployTopsportsMakerFactory: DeployFunction = async function (hre: Hardhat
     // event possibly not deployed yet or saved in db
     const eventDate = "2023-08-12T00:00:00Z"; // TODO from espn
 
-    if (false) {
+    if (1) {
       await postToApi({ signature, eventDate, ...data });
     }
   }
