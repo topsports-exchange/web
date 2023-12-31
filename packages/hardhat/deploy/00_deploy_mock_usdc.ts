@@ -22,7 +22,6 @@ const deployUSDCoin: DeployFunction = async function (hre: HardhatRuntimeEnviron
   const { deploy } = hre.deployments;
 
   await deploy("USDCoin", {
-    // await deploy("USDCoin", {
     from: deployer,
     // Contract constructor arguments
     // args: [deployer],
